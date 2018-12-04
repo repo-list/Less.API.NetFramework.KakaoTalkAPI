@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{BD0427C4-BA2A-48F8-8329-11574735F961}</ProjectGuid>
+    <ProjectGuid>{E12B07DF-F785-4CBA-827D-4EFCF962E8CE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>KakaoTalkAPI</RootNamespace>
-    <AssemblyName>KakaoTalkAPI</AssemblyName>
+    <RootNamespace>ClipboardManager</RootNamespace>
+    <AssemblyName>ClipboardManager</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -41,18 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="KakaoTalk.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ClipboardManagerAPI\ClipboardManagerAPI.csproj">
-      <Project>{eb92db69-9fab-4464-835b-c63846737174}</Project>
-      <Name>ClipboardManagerAPI</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\WindowsAPI\WindowsAPI.csproj">
-      <Project>{fed09d00-f2ea-4188-aba5-9d7347bffb5f}</Project>
-      <Name>WindowsAPI</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
