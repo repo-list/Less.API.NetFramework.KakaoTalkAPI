@@ -1,5 +1,6 @@
 # Less.API.NetFramework.KakaoTalkAPI
 An automation API which is applicable to the software "KakaoTalk for Windows" created and distributed by Kakao Corp.
+
 카카오 회사에서 제작하고 배포하는 "KakaoTalk for Windows" 소프트웨어에 적용 가능한 자동화 API입니다.
 
 @ Author : Eric Kim
