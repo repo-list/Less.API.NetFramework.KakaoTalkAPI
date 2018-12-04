@@ -11,7 +11,10 @@ namespace SampleApplication
         static void Main(string[] args)
         {
             // 원하는 기능의 주석 처리를 해제한 후, 각 메서드에서 요구되는 입력 값들을 수정한 다음 테스트하면 됩니다.
-            Console.WriteLine("Main 메서드에서 원하는 기능의 주석 처리를 해제한 후, 각 메서드에서 요구되는 입력 값들을 수정한 다음 테스트하면 됩니다.");
+            Console.WriteLine("카카오톡 API Version : " + KakaoTalk.ApiVersion);
+            Console.WriteLine();
+            Console.WriteLine("사용 방법 : Main 메서드에서 원하는 기능의 주석 처리를 해제한 후, 주석 처리를 해제한 메서드에서 요구되는 입력 값들을 수정한 다음 테스트하면 됩니다.");
+            Console.WriteLine();
 
             //TestLogin(); // 로그인 기능 테스트
             //TestFriendsTabFeatures(); // 친구 탭 기능 테스트

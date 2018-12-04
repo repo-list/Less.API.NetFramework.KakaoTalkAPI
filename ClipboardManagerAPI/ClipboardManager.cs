@@ -15,6 +15,9 @@ namespace Less
             {
                 public sealed class ClipboardManager
                 {
+                    // 버전 정보
+                    public readonly static string ApiVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
                     /// <summary>
                     /// TODO : 이 메서드의 내용을 정의해야 합니다.
                     /// </summary>

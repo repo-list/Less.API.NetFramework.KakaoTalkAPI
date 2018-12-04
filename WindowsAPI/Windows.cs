@@ -16,6 +16,9 @@ namespace Less
                 /// </summary>
                 public sealed class Windows
                 {
+                    // 버전 정보
+                    public readonly static string ApiVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
                     // hWnd 관련 상수값 목록
                     public const int GW_HWNDFIRST = 0;
                     public const int GW_HWNDLAST = 1;
