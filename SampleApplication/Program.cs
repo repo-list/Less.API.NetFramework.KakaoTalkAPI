@@ -16,11 +16,12 @@ namespace SampleApplication
             Console.WriteLine("사용 방법 : Main 메서드에서 원하는 기능의 주석 처리를 해제한 후, 주석 처리를 해제한 메서드에서 요구되는 입력 값들을 수정한 다음 테스트하면 됩니다.");
             Console.WriteLine();
 
-            //TestLogin(); // 로그인 기능 테스트
+            //TestLogin(); // 로그인 기능 테스트 (FinalTest를 제외한 다른 기능을 테스트할 때는 이 메서드를 무조건 한 번 먼저 호출해야 합니다.)
             //TestFriendsTabFeatures(); // 친구 탭 기능 테스트
             //TestChattingTabFeatures(); // 채팅 탭 기능 테스트
             //TestMultiThreading(); // 멀티스레딩 테스트
             //TestWindowReopen(); // 채팅방 다시 열기 기능 테스트
+            //TestRealtimeMessageCheck(); // 실시간 메시지 확인 테스트
             //FinalTest(); // 모든 기능 종합 테스트 (로그인 포함)
         }
 
@@ -47,6 +48,7 @@ namespace SampleApplication
         static void TestFriendsTabFeatures()
         {
             // 수정해야 할 입력값 목록 : friendsTab.StartChattingWith
+            // 이 메서드를 사용하려면 먼저 TestLogin 메서드를 주석 해제해야 합니다.
             Console.WriteLine("TestFriendsTabFeatures 시작");
 
             var mainWindow = KakaoTalk.MainWindow;
@@ -64,23 +66,23 @@ namespace SampleApplication
                 string nickname = "즐겨찾기 - 3번째 이모티콘"; // 심심풀이로 부여할 닉네임
                 int category = KakaoTalk.Emoticon.FavoritesCategory; // 즐겨찾기 카테고리
                 int position = 3; // 3번째 이모티콘 (즐겨찾기에 등록된 3번째 이모티콘이 있어야 정상적으로 작동)
-                var overActionSweat = new KakaoTalk.Emoticon(nickname, category, position);
+                var emoticon1 = new KakaoTalk.Emoticon(nickname, category, position);
 
                 nickname = "기본 이모티콘 - 최고"; // 심심풀이로 부여할 닉네임
                 category = KakaoTalk.Emoticon.BasicsCategory; // 기본 이모티콘 카테고리
                 position = KakaoTalk.Emoticon.BasicsPosition.최고; // 최고 이모티콘
-                var oowah = new KakaoTalk.Emoticon(nickname, category, position);
+                var emoticon2 = new KakaoTalk.Emoticon(nickname, category, position);
 
                 nickname = "4번째 카테고리 - 14번째 이모티콘"; // 심심풀이로 부여할 닉네임
                 category = 4; // 4번째 카테고리 (즐겨찾기, 기본 이모티콘을 제외한 나머지는 직접 번호로 지정)
                 position = 14; // 14번째 이모티콘 (4번째 카테고리의 14번째 이모티콘이 있어야 정상적으로 작동)
-                var customIndex = new KakaoTalk.Emoticon(nickname, category, position);
+                var emoticon3 = new KakaoTalk.Emoticon(nickname, category, position);
 
-                chatWindow.SendEmoticon(overActionSweat); // 즐겨찾기 이모티콘 전송
+                chatWindow.SendEmoticon(emoticon1); // 즐겨찾기 이모티콘 전송
                 Thread.Sleep(1000);
-                chatWindow.SendEmoticon(oowah); // 기본 이모티콘 전송
+                chatWindow.SendEmoticon(emoticon2); // 기본 이모티콘 전송
                 Thread.Sleep(1000);
-                chatWindow.SendEmoticon(customIndex); // 4번째 카테고리 이모티콘 전송
+                chatWindow.SendEmoticon(emoticon3); // 4번째 카테고리 이모티콘 전송
 
                 chatWindow.Close(); // 명시적으로 채팅창을 닫을 때 호출. 채팅창을 프로그램 내부적으로 없애기 위해서는
                                     // using 블럭을 사용하거나, Dispose 메서드를 직접 호출해야 함.
@@ -92,6 +94,7 @@ namespace SampleApplication
         static void TestChattingTabFeatures()
         {
             // 수정해야 할 입력값 목록 : chattingTab.StartChattingAt
+            // 이 메서드를 사용하려면 먼저 TestLogin 메서드를 주석 해제해야 합니다.
             Console.WriteLine("TestChattingTabFeatures 시작");
 
             var mainWindow = KakaoTalk.MainWindow;
@@ -140,6 +143,7 @@ namespace SampleApplication
         static void TestMultiThreading()
         {
             // 수정해야 할 입력값 목록 : friendsTab.StartChattingWith, chattingTab.StartChattingAt
+            // 이 메서드를 사용하려면 먼저 TestLogin 메서드를 주석 해제해야 합니다.
             Console.WriteLine("TestMultiThreading 시작");
 
             var mainWindow = KakaoTalk.MainWindow;
@@ -193,7 +197,8 @@ namespace SampleApplication
 
         static void TestWindowReopen()
         {
-            // 수정해야 할 입력값 목록 : friendsTab.StartChattingWith, chattingTab.StartChattingAt
+            // 수정해야 할 입력값 목록 : friendsTab.StartChattingWith
+            // 이 메서드를 사용하려면 먼저 TestLogin 메서드를 주석 해제해야 합니다.
             Console.WriteLine("TestWindowReopen 시작");
 
             var mainWindow = KakaoTalk.MainWindow;
@@ -216,6 +221,58 @@ namespace SampleApplication
             }
 
             Console.WriteLine("TestWindowReopen 완료");
+        }
+
+        static void TestRealtimeMessageCheck()
+        {
+            // 수정해야 할 입력값 목록 : friendsTab.StartChattingWith
+            // 이 메서드를 사용하려면 먼저 TestLogin 메서드를 주석 해제해야 합니다.
+
+            // 이 메서드는 메시지 내용 확인을 통한 디버깅 과정의 예시입니다.
+            // 실제 애플리케이션을 개발할 때는 순간적으로 여러 명이 동시에 메시지를 보낼 수 있기 때문에 lastMessage를 얻어오는 확인 작업이 아닌
+            // 현재까지의 검사 인덱스를 저장해 놓고, 그 다음 줄부터 체크하는 방식으로 개발을 진행하는 것이 바람직합니다.
+            // 또한, 배열의 길이가 커지면 시스템의 부담이 가중되기 때문에, 중간중간 배열 길이를 검사하여
+            // 채팅창을 재실행(KTChatWindow.Reopen())하여 메시지 배열 길이를 줄이는 것이 좋습니다.
+            // (채팅창을 껐다가 다시 켜면 메시지 배열 길이가 무조건 12로 고정됩니다.)
+
+            Console.WriteLine("TestRealtimeMessageCheck 시작");
+
+            var mainWindow = KakaoTalk.MainWindow;
+            var friendsTab = KakaoTalk.MainWindow.Friends;
+            mainWindow.ChangeTabTo(KakaoTalk.MainWindowTab.Friends);
+
+            using (var chatWindow = friendsTab.StartChattingWith("친구 닉네임"))
+            {
+                KakaoTalk.Message[] messages;
+                KakaoTalk.Message lastMessage;
+                int loopLength = 1000;
+                string keyword1 = "키워드1";
+                string keyword2 = "키워드2";
+                string keyword3 = "키워드3";
+                for (int i = 0; i < loopLength; i++)
+                {
+                    messages = chatWindow.GetMessagesUsingClipboard();
+                    if (messages == null) continue;
+                    lastMessage = messages[messages.Length - 1];
+                    Console.WriteLine($"메시지 확인 {i+1}/{loopLength} => 배열 길이 : {messages.Length}, lastMessage : \"{lastMessage.ToString()}\"");
+                    if (lastMessage.Content.Equals(keyword1)) chatWindow.SendText("키워드 1을 입력하셨습니다.");
+                    else if (lastMessage.Content.Equals(keyword2))
+                    {
+                        chatWindow.SendText("키워드 2를 입력하셨습니다.");
+                        Thread.Sleep(500);
+                        chatWindow.SendImageUsingClipboard(@"res\images\샘플이미지.png");
+                    }
+                    else if (lastMessage.Content.Equals(keyword3))
+                    {
+                        chatWindow.SendText("키워드 3을 입력하셨습니다.");
+                        Thread.Sleep(500);
+                        chatWindow.SendEmoticon(new KakaoTalk.Emoticon("이모티콘", KakaoTalk.Emoticon.FavoritesCategory, 1));
+                    }
+                    Thread.Sleep(50);
+                }
+            }
+
+            Console.WriteLine("TestRealtimeMessageCheck 완료");
         }
 
         static void FinalTest()
@@ -301,7 +358,7 @@ namespace SampleApplication
 
             for (int i = 0; i < chatWindows.Count; i++) chatWindows[i].Dispose();
 
-            Console.WriteLine("FinalTest 종료");
+            Console.WriteLine("FinalTest 완료");
         }
     }
 }

@@ -18,20 +18,73 @@ namespace Less
                     // 버전 정보
                     public readonly static string ApiVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
+                    public static bool HasDataToRestore = false;
+                    static uint Format;
+                    static object Data;
+                    static readonly IntPtr ClipboardOwner = IntPtr.Zero;
+
                     /// <summary>
-                    /// TODO : 이 메서드의 내용을 정의해야 합니다.
+                    /// 현재 클립보드에 저장되어 있는 데이터를 백업합니다. 클립보드 열기 요청 실패 시 ClipboardManager.CannotOpenException 예외가 발생합니다.
                     /// </summary>
                     public static void BackupData()
                     {
+                        Format = 0;
 
+                        bool isClipboardOpen = Windows.OpenClipboard(ClipboardOwner);
+                        if (!isClipboardOpen) throw new CannotOpenException();
+                        do { Format = Windows.EnumClipboardFormats(Format); }
+                        while (Format >= 0x200 || Format == 0);
+
+                        IntPtr pointer = Windows.GetClipboardData(Format);
+                        switch (Format)
+                        {
+                            case Windows.CF_TEXT:
+                                Data = Marshal.PtrToStringAnsi(pointer);
+                                break;
+                            case Windows.CF_UNICODETEXT:
+                                Data = Marshal.PtrToStringUni(pointer);
+                                break;
+                            case Windows.CF_BITMAP:
+                                Data = Image.FromHbitmap(pointer);
+                                break;
+                        }
+                        Windows.CloseClipboard();
+
+                        HasDataToRestore = true;
                     }
 
                     /// <summary>
-                    /// TODO : 이 메서드의 내용을 정의해야 합니다.
+                    /// 백업했던 클립보드 데이터를 복구합니다. 현재 텍스트와 이미지만 복구 기능을 지원하며, 클립보드 열기 요청 실패 시 ClipboardManager.CannotOpenException 예외가 발생합니다.
                     /// </summary>
                     public static void RestoreData()
                     {
+                        if (!HasDataToRestore) return;
+                        IntPtr hMemory = IntPtr.Zero;
 
+                        bool isClipboardOpen = Windows.OpenClipboard(ClipboardOwner);
+                        if (!isClipboardOpen) throw new CannotOpenException();
+
+                        switch (Format)
+                        {
+                            case Windows.CF_TEXT:
+                                hMemory = Marshal.StringToHGlobalAnsi((string)Data);
+                                Windows.SetClipboardData(Format, hMemory);
+                                break;
+                            case Windows.CF_UNICODETEXT:
+                                hMemory = Marshal.StringToHGlobalUni((string)Data);
+                                Windows.SetClipboardData(Format, hMemory);
+                                break;
+                            case Windows.CF_BITMAP:
+                            case Windows.CF_DIB:
+                                Format = Windows.CF_BITMAP;
+                                hMemory = ((Bitmap)Data).GetHbitmap();
+                                SetImage(hMemory);
+                                break;
+                        }
+
+                        Windows.CloseClipboard();
+
+                        HasDataToRestore = false;
                     }
 
                     /// <summary>
@@ -41,7 +94,7 @@ namespace Less
                     {
                         string text = null;
 
-                        bool isClipboardOpen = Windows.OpenClipboard(IntPtr.Zero);
+                        bool isClipboardOpen = Windows.OpenClipboard(ClipboardOwner);
                         if (!isClipboardOpen) throw new CannotOpenException();
                         IntPtr pointer = Windows.GetClipboardData(Windows.CF_UNICODETEXT);
                         if (pointer == IntPtr.Zero)
@@ -61,7 +114,7 @@ namespace Less
                     /// <param name="text">저장할 텍스트</param>
                     public static void SetText(string text)
                     {
-                        bool isClipboardOpen = Windows.OpenClipboard(IntPtr.Zero);
+                        bool isClipboardOpen = Windows.OpenClipboard(ClipboardOwner);
                         if (!isClipboardOpen) throw new CannotOpenException();
                         Windows.EmptyClipboard();
                         Windows.SetClipboardData(Windows.CF_TEXT, Marshal.StringToHGlobalAnsi(text));
@@ -75,38 +128,45 @@ namespace Less
                     /// <param name="imagePath">저장할 이미지의 원본 파일 경로</param>
                     public static void SetImage(string imagePath)
                     {
-                        using (Bitmap image = (Bitmap)Image.FromFile(imagePath))
+                        using (Bitmap image = (Bitmap)Image.FromFile(imagePath)) { _SetImage(image); }
+                    }
+
+                    public static void SetImage(IntPtr hBitmap)
+                    {
+                        using (Bitmap image = Image.FromHbitmap(hBitmap)) { _SetImage(image); }
+                    }
+
+                    private static void _SetImage(Bitmap image)
+                    {
+                        using (Graphics graphics = Graphics.FromImage(image))
                         {
-                            using (Graphics graphics = Graphics.FromImage(image))
+                            IntPtr hScreenDC = Windows.GetWindowDC(IntPtr.Zero); // 기본적인 Device Context의 속성들을 카피하기 위한 작업
+                            IntPtr hDestDC = Windows.CreateCompatibleDC(hScreenDC);
+                            IntPtr hDestBitmap = Windows.CreateCompatibleBitmap(hScreenDC, image.Width, image.Height); // destDC와 destBitmap 모두 반드시 screenDC의 속성들을 기반으로 해야 함.
+                            IntPtr hPrevDestObject = Windows.SelectObject(hDestDC, hDestBitmap);
+
+                            IntPtr hSourceDC = graphics.GetHdc();
+                            IntPtr hSourceBitmap = image.GetHbitmap();
+                            IntPtr hPrevSourceObject = Windows.SelectObject(hSourceDC, hSourceBitmap);
+
+                            Windows.BitBlt(hDestDC, 0, 0, image.Width, image.Height, hSourceDC, 0, 0, Windows.SRCCOPY);
+
+                            Windows.DeleteObject(Windows.SelectObject(hSourceDC, hPrevSourceObject));
+                            Windows.SelectObject(hDestDC, hPrevDestObject); // 리턴값 : hDestBitmap
+                            graphics.ReleaseHdc(hSourceDC);
+                            Windows.DeleteDC(hDestDC);
+
+                            bool isClipboardOpen = Windows.OpenClipboard(ClipboardOwner);
+                            if (!isClipboardOpen)
                             {
-                                IntPtr hScreenDC = Windows.GetWindowDC(IntPtr.Zero); // 기본적인 Device Context의 속성들을 카피하기 위한 작업
-                                IntPtr hDestDC = Windows.CreateCompatibleDC(hScreenDC);
-                                IntPtr hDestBitmap = Windows.CreateCompatibleBitmap(hScreenDC, image.Width, image.Height); // destDC와 destBitmap 모두 반드시 screenDC의 속성들을 기반으로 해야 함.
-                                IntPtr hPrevDestObject = Windows.SelectObject(hDestDC, hDestBitmap);
-
-                                IntPtr hSourceDC = graphics.GetHdc();
-                                IntPtr hSourceBitmap = image.GetHbitmap();
-                                IntPtr hPrevSourceObject = Windows.SelectObject(hSourceDC, hSourceBitmap);
-
-                                Windows.BitBlt(hDestDC, 0, 0, image.Width, image.Height, hSourceDC, 0, 0, Windows.SRCCOPY);
-
-                                Windows.DeleteObject(Windows.SelectObject(hSourceDC, hPrevSourceObject));
-                                Windows.SelectObject(hDestDC, hPrevDestObject); // 리턴값 : hDestBitmap
-                                graphics.ReleaseHdc(hSourceDC);
-                                Windows.DeleteDC(hDestDC);
-
-                                bool isClipboardOpen = Windows.OpenClipboard(IntPtr.Zero);
-                                if (!isClipboardOpen)
-                                {
-                                    Windows.DeleteObject(hDestBitmap);
-                                    throw new CannotOpenException();
-                                }
-                                Windows.EmptyClipboard();
-                                Windows.SetClipboardData(Windows.CF_BITMAP, hDestBitmap);
-                                Windows.CloseClipboard();
-
                                 Windows.DeleteObject(hDestBitmap);
+                                throw new CannotOpenException();
                             }
+                            Windows.EmptyClipboard();
+                            Windows.SetClipboardData(Windows.CF_BITMAP, hDestBitmap);
+                            Windows.CloseClipboard();
+
+                            Windows.DeleteObject(hDestBitmap);
                         }
                     }
 

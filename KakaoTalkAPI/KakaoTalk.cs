@@ -46,17 +46,24 @@ namespace Less
                 public sealed class KakaoTalk
                 {
                     // 버전 정보
+                    /// <summary>
+                    /// 현재 카카오톡 API의 버전 값을 담고 있는 스트링입니다.
+                    /// </summary>
                     public readonly static string ApiVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
                     
                     // 변경해도 되는 값 목록 (개발 시에 유동적으로 변경해서 쓰도록 함)
+                    /// <summary>
+                    /// 카카오톡이 설치된 경로입니다. 만약 설치 경로를 수동으로 지정했을 경우, 이 값을 변경하여 사용하도록 합니다.
+                    /// </summary>
                     public static string InstallPath = @"C:\Program Files (x86)\Kakao\KakaoTalk\KakaoTalk.exe";
-                    public static int DefaultChattingCheckInterval = 20; // 권장 : 20 ~ 50 (채팅방 Task 검사 스레드의 Sleep 시간)
 
+                    public static int DefaultChattingCheckInterval = 20; // 권장 : 20 ~ 50 (채팅방 Task 검사 스레드의 Sleep 시간)
                     public static int ProgressCheckInterval = 20; // 권장 20 ~ 50 (기본적인 폴링 시 전반적으로 사용되는 값)
                     public static int UIChangeInterval = 1000; // 권장 : 1000 이상
                     public static int MouseClickInterval = 200; // 권장 : 200 이상
                     public static int KeyPressInterval = 200; // 권장 : 200 이상
                     public static int ButtonActivateInterval = 200; // 권장 : 200 이상
+                    public static int SendActivateInterval = 100; // 권장 : 100 이상
                     public static int ImageCheckInterval = 0; // 권장 : 10 이하, 검사 속도를 빠르게 하는 것이 무엇보다 중요함
                     public static int ImageCheckLimit = 500; // 권장 : 1000 이하
                     public static int EmoticonCheckInterval1 = 0; // 권장 : 10 이하, 검사 속도를 빠르게 하는 것이 무엇보다 중요함
@@ -301,7 +308,8 @@ namespace Less
                             /// </summary>
                             /// <param name="nickname">검색할 친구의 별명</param>
                             /// <param name="index">인덱스 값. 최솟값은 1이며, 검색된 친구들 중 해당 번째에 나온 친구와 대화를 시작합니다.</param>
-                            public KTChatWindow StartChattingWith(string nickname, int index = 1)
+                            /// <param name="minimizeWindow">채팅 시작 후, 바로 채팅창을 최소화할지 여부</param>
+                            public KTChatWindow StartChattingWith(string nickname, int index = 1, bool minimizeWindow = false)
                             {
                                 ClearSearchResult();
                                 SearchByNickname(nickname);
@@ -309,16 +317,18 @@ namespace Less
                                 Thread.Sleep(MouseClickInterval);
                                 for (int i = 1; i < index; i++) Windows.PressKeyInBackground(SearchResultListHandle, Windows.KeyCode.VK_DOWN);
                                 Thread.Sleep(KeyPressInterval);
+                                KTChatWindow chatRoom;
                                 lock (ChatWindows)
                                 {
                                     Windows.PressKeyInBackground(SearchResultListHandle, Windows.KeyCode.VK_ENTER);
                                     while (!IsChatRoomOpen(nickname)) Thread.Sleep(ProgressCheckInterval);
+                                    chatRoom = new KTChatWindow(nickname, index);
+                                    if (minimizeWindow) chatRoom.Minimize();
                                 }
+                                ChatWindows.Add(chatRoom);
                                 ClearSearchResult();
-                                KTChatWindow roomInfo = new KTChatWindow(nickname, index);
-                                ChatWindows.Add(roomInfo);
 
-                                return roomInfo;
+                                return chatRoom;
                             }
                         }
 
@@ -368,13 +378,13 @@ namespace Less
                             /// </summary>
                             /// <param name="roomName">검색할 채팅방 이름</param>
                             /// <param name="index">인덱스 값. 최솟값은 1이며, 검색된 채팅방 중 해당 번째에 나온 방에서 대화를 시작합니다.</param>
-                            /// <returns></returns>
-                            public KTChatWindow StartChattingAt(string roomName, int index = 1)
+                            /// <param name="minimizeWindow">채팅 시작 후, 바로 채팅창을 최소화할지 여부</param>
+                            public KTChatWindow StartChattingAt(string roomName, int index = 1, bool minimizeWindow = false)
                             {
-                                return _StartChattingAt(roomName, index, null);
+                                return _StartChattingAt(roomName, index, minimizeWindow, null);
                             }
 
-                            internal KTChatWindow _StartChattingAt(string roomName, int index, KTChatWindow previousWindow)
+                            internal KTChatWindow _StartChattingAt(string roomName, int index, bool minimizeWindow, KTChatWindow previousWindow)
                             {
                                 ClearSearchResult();
                                 SearchByRoomName(roomName);
@@ -382,22 +392,22 @@ namespace Less
                                 Thread.Sleep(MouseClickInterval);
                                 for (int i = 1; i < index; i++) Windows.PressKeyInBackground(SearchResultListHandle, Windows.KeyCode.VK_DOWN);
                                 Thread.Sleep(KeyPressInterval);
+                                KTChatWindow chatRoom = null;
                                 lock (ChatWindows)
                                 {
                                     Windows.PressKeyInBackground(SearchResultListHandle, Windows.KeyCode.VK_ENTER);
                                     while (!IsChatRoomOpen(roomName)) Thread.Sleep(ProgressCheckInterval);
+                                    if (previousWindow == null)
+                                    {
+                                        chatRoom = new KTChatWindow(roomName, index);
+                                        if (minimizeWindow) chatRoom.Minimize();
+                                        ChatWindows.Add(chatRoom);
+                                    }
+                                    else chatRoom = new KTChatWindow(roomName, index, false);
                                 }
                                 ClearSearchResult();
 
-                                KTChatWindow roomInfo = null;
-                                if (previousWindow == null)
-                                {
-                                    roomInfo = new KTChatWindow(roomName, index);
-                                    ChatWindows.Add(roomInfo);
-                                }
-                                else roomInfo = new KTChatWindow(roomName, index, false);
-
-                                return roomInfo;
+                                return chatRoom;
                             }
                         }
 
@@ -415,6 +425,9 @@ namespace Less
                         }
                     }
 
+                    /// <summary>
+                    /// 카카오톡 채팅 창을 제어할 수 있도록 만들어진 클래스입니다.
+                    /// </summary>
                     public class KTChatWindow : IDisposable
                     {
                         public string RoomName { get; }
@@ -458,7 +471,6 @@ namespace Less
                         /// 채팅 창에 텍스트 메시지를 보냅니다. 정상적으로 메시지가 보내졌다면 true를, 만약 채팅 창이 종료된 상태여서 전송 실패 시 false를 반환합니다.
                         /// </summary>
                         /// <param name="text">보낼 텍스트</param>
-                        /// <returns></returns>
                         public void SendText(string text)
                         {
                             Tasks.Add(new Task(TaskType.SendText, text));
@@ -470,6 +482,11 @@ namespace Less
 
                             Windows.SetEditText(EditMessageHandle, text, Windows.Encoding.Unicode);
                             Thread.Sleep(ButtonActivateInterval);
+                            if (Windows.IsIconic(RootHandle))
+                            {
+                                ActivateInput();
+                                Thread.Sleep(SendActivateInterval);
+                            }
                             lock (ChatWindows)
                             {
                                 Windows.PressKeyInBackground(EditMessageHandle, Windows.KeyCode.VK_ENTER);
@@ -482,7 +499,7 @@ namespace Less
                         }
 
                         /// <summary>
-                        /// 채팅 창에 이미지를 보냅니다.
+                        /// 클립보드를 활용하여 채팅 창에 이미지를 보냅니다.
                         /// 정상적으로 이미지가 보내졌다면 true를, 만약 채팅 창이 종료된 상태이거나 클립보드 작업에 실패 또는 예기치 않은 문제로 인하여 실패 시 false를 반환합니다.
                         /// </summary>
                         /// <param name="imagePath">보낼 이미지의 경로 (상대 경로 및 절대 경로 모두 가능)</param>
@@ -560,6 +577,12 @@ namespace Less
                                 }
                                 else
                                 {
+                                    bool wasMinimized = false;
+                                    if (Windows.IsIconic(RootHandle))
+                                    {
+                                        wasMinimized = true;
+                                        lock (ChatWindows) Windows.ShowWindow(RootHandle, Windows.SW_RESTORE);
+                                    }
                                     var chatWindowRect = Windows.GetWindowRect(RootHandle);
                                     int height = chatWindowRect.bottom - chatWindowRect.top;
                                     Windows.ClickInBackground(RootHandle, Windows.MouseButton.Left, 21, (short)(height - 21));
@@ -601,7 +624,7 @@ namespace Less
                                     var dialogRect = Windows.GetWindowRect(hSendDialog);
                                     int dialogWidth = dialogRect.right - dialogRect.left;
                                     int dialogHeight = dialogRect.bottom - dialogRect.top;
-                                    if (dialogWidth != EmoticonDialogWidth || dialogHeight != EmoticonDialogHeight) ResizeDialog(hSendDialog, EmoticonDialogWidth, EmoticonDialogHeight);
+                                    //if (dialogWidth != EmoticonDialogWidth || dialogHeight != EmoticonDialogHeight) ResizeDialog(hSendDialog, EmoticonDialogWidth, EmoticonDialogHeight);
 
                                     // 카테고리 커서 초기화
                                     int categorySingleRowCount = 7;
@@ -634,6 +657,8 @@ namespace Less
                                     Windows.PressKeyInBackground(hSendDialog, Windows.KeyCode.VK_ESC);
                                     Windows.PressKeyInBackground(EditMessageHandle, Windows.KeyCode.VK_ENTER);
                                     Thread.Sleep(KeyPressInterval);
+
+                                    if (wasMinimized) lock (ChatWindows) Windows.ShowWindow(RootHandle, Windows.SW_MINIMIZE);
                                 }
                             }
 
@@ -641,7 +666,7 @@ namespace Less
                         }
 
                         /// <summary>
-                        /// 현재 채팅창에 있는 전체 메시지 목록을 가져옵니다.
+                        /// 클립보드를 활용하여 현재 채팅창에 있는 전체 메시지 목록을 가져옵니다. 클립보드 제어 문제로 인하여 목록 가져오기 실패 시 null을 반환합니다.
                         /// </summary>
                         public Message[] GetMessagesUsingClipboard()
                         {
@@ -702,17 +727,17 @@ namespace Less
                         /// <summary>
                         /// 채팅창을 닫고 다시 엽니다. 만약 이미 채팅창이 닫힌 상태라면 바로 다시 열립니다.
                         /// </summary>
-                        public void Reopen()
+                        public void Reopen(bool minimizeWindow = false)
                         {
-                            Tasks.Add(new Task(TaskType.Reopen));
+                            Tasks.Add(new Task(TaskType.Reopen, minimizeWindow));
                             lock (this) Monitor.Wait(this);
                         }
 
-                        private void _Reopen()
+                        private void _Reopen(bool minimizeWindow)
                         {
                             if (IsOpen()) _Close();
                             MainWindow.ChangeTabTo(MainWindowTab.Chatting);
-                            KTChatWindow newWindowInfo = MainWindow.Chatting._StartChattingAt(RoomName, SearchIndex, this);
+                            KTChatWindow newWindowInfo = MainWindow.Chatting._StartChattingAt(RoomName, SearchIndex, minimizeWindow, this);
                             RootHandle = newWindowInfo.RootHandle;
                             EditMessageHandle = newWindowInfo.EditMessageHandle;
                             SearchWordsHandle = newWindowInfo.SearchWordsHandle;
@@ -732,6 +757,22 @@ namespace Less
                             if (IsOpen()) _Close();
                             ThreadActivated = false;
                             ChatWindows.Remove(this);
+                        }
+
+                        /// <summary>
+                        /// 현재 채팅창을 최소화합니다.
+                        /// </summary>
+                        public void Minimize()
+                        {
+
+                        }
+
+                        /// <summary>
+                        /// 현재 채팅창을 최소화 상태에서 원래 상태로 복구합니다.
+                        /// </summary>
+                        public void Restore()
+                        {
+
                         }
 
                         // private 메서드 목록
@@ -755,8 +796,8 @@ namespace Less
                         {
                             // 이모티콘 다이얼로그의 실행은 "현재 카톡 창이 ForegroundWindow인가"에 의해 결정됨.
                             // 만약 ForegroundWindow라면, 해당 시점에 EmoticonDialogClass와 EmoticonDialogCaption를 가진 첫 번째 다이얼로그이며,
-                            // 그렇지 않다면, 해당 시점에 EmoticonDialogClass와 EmoticonDialogCaption를 가진 두 번째 다이얼로그가 이모티콘 다이얼로그임.
-                            // 그래서 해당 식별자들을 가진 TopMost Window Handle 목록을 얻어온 다음 원하는 구조를 가지고 있는지 확인하는 작업이 필요함.
+                            // 그렇지 않다면, 해당 시점에 EmoticonDialogClass와 EmoticonDialogCaption를 가진 또 다른 다이얼로그가 이모티콘 다이얼로그임.
+                            // 그래서 해당 식별자들을 가진 Topmost Window Handle 목록을 얻어온 다음 원하는 구조를 가지고 있는 다이얼로그를 찾는 작업이 필요함.
 
                             if (checkInterval > 0) Thread.Sleep(checkInterval);
                             IntPtr hWndTemp;
@@ -798,6 +839,11 @@ namespace Less
                             Windows.MoveWindow(hWnd, prevX + (prevWidth - width), prevY + (prevHeight - height));
                         }
 
+                        private void ActivateInput()
+                        {
+                            Windows.SendMessage(RootHandle, Windows.WM_COMMAND, (0x400 * 0x10000) | (1006 & 0xFFFF), (int)RootHandle);
+                        }
+
                         private void RunTasks()
                         {
                             Console.WriteLine($"Thread 실행 ({RoomName})");
@@ -825,7 +871,7 @@ namespace Less
                                             _Close();
                                             break;
                                         case TaskType.Reopen:
-                                            _Reopen();
+                                            _Reopen((bool)CurrentTask.Parameter);
                                             lock (this) Monitor.Pulse(this);
                                             break;
                                         case TaskType.Dispose:
@@ -870,10 +916,22 @@ namespace Less
 
                     public enum MessageType { Unknown, DateChange, UserJoin, UserLeave, Talk }
 
+                    /// <summary>
+                    /// 카카오톡 메시지에 대한 데이터를 담고 있는 구조체입니다.
+                    /// </summary>
                     public struct Message
                     {
+                        /// <summary>
+                        /// 해당 메시지의 타입. 타입은 KakaoTalk.MessageType 을 참고하세요.
+                        /// </summary>
                         public MessageType Type { get; }
+                        /// <summary>
+                        /// 해당 메시지를 보낸 유저의 이름
+                        /// </summary>
                         public string Username { get; }
+                        /// <summary>
+                        /// 해당 메시지의 내용
+                        /// </summary>
                         public string Content { get; }
 
                         public Message(string fullContent)
@@ -881,6 +939,28 @@ namespace Less
                             Type = GetMessageType(fullContent);
                             Username = GetUserName(fullContent, Type);
                             Content = GetContent(fullContent, Type, Username);
+                        }
+
+                        public override string ToString()
+                        {
+                            string type = "";
+                            switch (Type)
+                            {
+                                case MessageType.DateChange:
+                                    type = "DateChange";
+                                    break;
+                                case MessageType.UserJoin:
+                                    type = "UserJoin";
+                                    break;
+                                case MessageType.UserLeave:
+                                    type = "UserLeave";
+                                    break;
+                                case MessageType.Talk:
+                                    type = "Talk";
+                                    break;
+                            }
+
+                            return $"Type : {type}, Username : {Username}, Content : {Content}";
                         }
 
                         private static MessageType GetMessageType(string fullContent)

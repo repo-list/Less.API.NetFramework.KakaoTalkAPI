@@ -63,12 +63,17 @@ namespace Less
                     // Clipboard
                     public const int CF_TEXT = 1;
                     public const int CF_BITMAP = 2;
+                    public const int CF_DIB = 8;
                     public const int CF_UNICODETEXT = 13;
 
                     // Hooking
                     public const int WH_GETMESSAGE = 3;
                     public const int WH_CALLWNDPROC = 4;
                     public const int WH_KEYBOARD_LL = 13;
+
+                    // ShowWindow
+                    public const int SW_MINIMIZE = 6;
+                    public const int SW_RESTORE = 9;
 
                     [DllImport("User32.dll")]
                     public static extern IntPtr FindWindow(string className, string wndTitle);
@@ -137,6 +142,9 @@ namespace Less
                     public static extern IntPtr GetClipboardData(uint format);
 
                     [DllImport("User32.dll")]
+                    public static extern uint EnumClipboardFormats(uint format);
+
+                    [DllImport("User32.dll")]
                     public static extern bool CloseClipboard();
 
                     // 창 다루기
@@ -162,6 +170,12 @@ namespace Less
 
                     [DllImport("User32.dll")]
                     public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool repaint);
+
+                    [DllImport("User32.dll")]
+                    public static extern bool IsIconic(IntPtr hWnd);
+
+                    [DllImport("User32.dll")]
+                    public static extern bool ShowWindow(IntPtr hWnd, int command);
 
                     // 커스텀 API 목록
 
