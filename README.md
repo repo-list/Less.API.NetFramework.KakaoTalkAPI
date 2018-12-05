@@ -33,15 +33,17 @@ An automation API which is applicable to the software "KakaoTalk for Windows" cr
 
 # Version History
 - 0.2.0 (2018-12-05, Latest)
-Added support for backing up and restoring clipboard data (only texts and images are available currently)
-클립보드 데이터를 백업하고 복구하는 기능 지원 (현재 텍스트와 이미지만 가능합니다)
 
-Added support for minimizing chat windows while doing an automated work
-자동화 작업 시에 채팅창을 최소화하는 기능 지원
+> Added support for backing up and restoring clipboard data (only texts and images are available currently)
+> 클립보드 데이터를 백업하고 복구하는 기능 지원 (현재 텍스트와 이미지만 가능합니다)
 
-Added and fixed couple of API and sample application comments.
-API 및 샘플 애플리케이션에 관한 주석 여러 개 수정 및 추가.
+> Added support for minimizing chat windows while doing an automated work
+> 자동화 작업 시에 채팅창을 최소화하는 기능 지원
+
+> Added and fixed couple of API and sample application comments.
+> API 및 샘플 애플리케이션에 관한 주석 여러 개 수정 및 추가.
 
 - 0.1.0 (2018-12-04)
-Initial publish of KakaoTalk API.
-카카오톡 API 최초 공개.
+
+> Initial publish of KakaoTalk API.
+> 카카오톡 API 최초 공개.
