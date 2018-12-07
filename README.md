@@ -34,53 +34,53 @@ An automation API which is applicable to the software "KakaoTalk for Windows" cr
 
 - FriendsTab.StartChattingWith() / ChattingTab.StartChattingAt() -> Deleted way to find a chat using index parameter (perfect way to achieve this not implemented currently)
 
-- *FriendsTab.StartChattingWith() / ChattingTab.StartChattingAt() -> index를 통해 찾는 기능 제거 (현재 완벽한 로직이 구현되지 않은 상태)*
+- -> *FriendsTab.StartChattingWith() / ChattingTab.StartChattingAt() -> index를 통해 찾는 기능 제거 (현재 완벽한 로직이 구현되지 않은 상태)*
 
 
 - FriendsTab -> Added StartChattingWithMyself(string myNickname) method.
 
-- *FriendsTab -> StartChattingWithMyself(string myNickname) 메서드 추가. (나 자신과 대화하는 기능)*
+- -> *FriendsTab -> StartChattingWithMyself(string myNickname) 메서드 추가. (나 자신과 대화하는 기능)*
 
 
 - SampleApplication -> Added TestChattingWithMyself() method.
 
-- *SampleApplication -> TestChattingWithMyself() 메서드 추가*
+- -> *SampleApplication -> TestChattingWithMyself() 메서드 추가*
 
 
 - SampleApplication -> Added induction to invoke KakaoTalk.InitializeManually() method manually, if TestLogin method has not been called.
 
-- *SampleApplication -> TestLogin 메서드를 호출하지 않았을 경우, KakaoTalk.InitializeManually() 메서드를 수동으로 호출하도록 유도하는 내용 추가.*
+- -> *SampleApplication -> TestLogin 메서드를 호출하지 않았을 경우, KakaoTalk.InitializeManually() 메서드를 수동으로 호출하도록 유도하는 내용 추가.*
 
 
 - SampleApplication.TestRealtimeMessageCheck() -> Changed some method contents and comments.
 
-- *SampleApplication.TestRealtimeMessageCheck() -> 주석 및 메서드 내용 일부 변경*
+- -> *SampleApplication.TestRealtimeMessageCheck() -> 주석 및 메서드 내용 일부 변경*
 
 
 - Additionally, modified some text messages in SampleApplication.
 
-- *기타 SampleApplication 내 메시지 일부 수정*
-
+- -> *기타 SampleApplication 내 메시지 일부 수정*
+<br/><br/>
 
 @ 0.2.0 (2018-12-05)
 
 - Added support for backing up and restoring clipboard data (only texts and images are available currently)
 
-- *클립보드 데이터를 백업하고 복구하는 기능 지원 (현재 텍스트와 이미지만 가능합니다)*
+- -> *클립보드 데이터를 백업하고 복구하는 기능 지원 (현재 텍스트와 이미지만 가능합니다)*
 
 
 - Added support for minimizing chat windows while doing an automated work
 
-- *자동화 작업 시에 채팅창을 최소화하는 기능 지원*
+- -> *자동화 작업 시에 채팅창을 최소화하는 기능 지원*
 
 
 - Added and fixed couple of API and sample application comments.
 
-- *API 및 샘플 애플리케이션에 관한 주석 여러 개 수정 및 추가.*
-
+- -> *API 및 샘플 애플리케이션에 관한 주석 여러 개 수정 및 추가.*
+<br/><br/>
 
 @ 0.1.0 (2018-12-04)
 
 - Initial publish of KakaoTalk API.
 
-- *카카오톡 API 최초 공개.*
+- -> *카카오톡 API 최초 공개.*
