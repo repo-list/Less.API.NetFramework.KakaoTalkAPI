@@ -16,7 +16,8 @@ namespace Less
                 public sealed class ClipboardManager
                 {
                     // 버전 정보
-                    public readonly static string ApiVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                    private static string FullApiVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                    public readonly static string ApiVersion = FullApiVersion.Substring(0, FullApiVersion.LastIndexOf('.'));
 
                     public static bool HasDataToRestore = false;
                     static uint Format;
