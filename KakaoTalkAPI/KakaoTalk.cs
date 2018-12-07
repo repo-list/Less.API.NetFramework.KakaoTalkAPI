@@ -10,7 +10,7 @@
  * 
  * @ ProductName : Less.API.NetFramework.KakaoTalkAPI
  * 
- * @ Version : 0.1.0.0
+ * @ Version : 0.2.1
  * 
  * @ License : The Non-Profit Open Software License v3.0 (NPOSL-3.0) (https://opensource.org/licenses/NPOSL-3.0)
  * -> 이 API에는 NPOSL-3.0 오픈소스 라이선스가 적용되며, 사용자는 절대 영리적 목적으로 이 API를 사용해서는 안 됩니다.
@@ -45,12 +45,15 @@ namespace Less
                 /// </summary>
                 public sealed class KakaoTalk
                 {
+
                     // 버전 정보
+                    private static string FullApiVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
                     /// <summary>
                     /// 현재 카카오톡 API의 버전 값을 담고 있는 스트링입니다.
                     /// </summary>
-                    public readonly static string ApiVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                    
+                    public readonly static string ApiVersion = FullApiVersion.Substring(0, FullApiVersion.LastIndexOf('.'));
+
                     // 변경해도 되는 값 목록 (개발 시에 유동적으로 변경해서 쓰도록 함)
                     /// <summary>
                     /// 카카오톡이 설치된 경로입니다. 만약 설치 경로를 수동으로 지정했을 경우, 이 값을 변경하여 사용하도록 합니다.
@@ -107,6 +110,9 @@ namespace Less
 
                     // 열거형 자료 목록
                     public enum MainWindowTab { Friends = 1, Chatting, More }
+
+                    // 초기화 여부
+                    private static bool Initialized = false;
 
                     // KakaoTalk.Message 및 KakaoTalk.Emoticon 구조체에 관한 정의는 맨 아래쪽에 있습니다.
 
@@ -194,12 +200,19 @@ namespace Less
                         InitializeAppSettings();
                     }
 
+                    public static bool IsInitialized()
+                    {
+                        return Initialized;
+                    }
+
                     private static void InitializeAppSettings()
                     {
                         if (!IsLoggedIn()) throw new NotLoggedInException();
 
                         IntPtr hMainWindow = Windows.FindWindow(MainWindowClass, MainWindowTitle);
                         MainWindow = new KTMainWindow(hMainWindow);
+
+                        Initialized = true;
                     }
 
                     /// <summary>
@@ -304,29 +317,42 @@ namespace Less
                             }
 
                             /// <summary>
-                            /// 해당 별명을 가지고 있거나 포함하는 친구와 대화를 시작합니다.
+                            /// 해당 별명을 가지고 있는 친구와 대화를 시작합니다. (별명은 정확히 일치해야 합니다)
                             /// </summary>
                             /// <param name="nickname">검색할 친구의 별명</param>
-                            /// <param name="index">인덱스 값. 최솟값은 1이며, 검색된 친구들 중 해당 번째에 나온 친구와 대화를 시작합니다.</param>
                             /// <param name="minimizeWindow">채팅 시작 후, 바로 채팅창을 최소화할지 여부</param>
-                            public KTChatWindow StartChattingWith(string nickname, int index = 1, bool minimizeWindow = false)
+                            public KTChatWindow StartChattingWith(string nickname, bool minimizeWindow = false)
                             {
                                 ClearSearchResult();
                                 SearchByNickname(nickname);
                                 Windows.ClickInBackground(SearchResultListHandle, Windows.MouseButton.Left, FirstSearchItemX, FirstSearchItemY);
                                 Thread.Sleep(MouseClickInterval);
-                                for (int i = 1; i < index; i++) Windows.PressKeyInBackground(SearchResultListHandle, Windows.KeyCode.VK_DOWN);
-                                Thread.Sleep(KeyPressInterval);
                                 KTChatWindow chatRoom;
                                 lock (ChatWindows)
                                 {
                                     Windows.PressKeyInBackground(SearchResultListHandle, Windows.KeyCode.VK_ENTER);
                                     while (!IsChatRoomOpen(nickname)) Thread.Sleep(ProgressCheckInterval);
-                                    chatRoom = new KTChatWindow(nickname, index);
+                                    chatRoom = new KTChatWindow(nickname);
                                     if (minimizeWindow) chatRoom.Minimize();
                                 }
                                 ChatWindows.Add(chatRoom);
                                 ClearSearchResult();
+
+                                return chatRoom;
+                            }
+
+                            public KTChatWindow StartChattingWithMyself(string myNickname, bool minimizeWindow = false)
+                            {
+                                ClearSearchResult();
+                                KTChatWindow chatRoom;
+                                lock (ChatWindows)
+                                {
+                                    Windows.DoubleClickInBackground(FriendsListHandle, Windows.MouseButton.Left, 86, 62);
+                                    while (!IsChatRoomOpen(myNickname)) Thread.Sleep(ProgressCheckInterval);
+                                    chatRoom = new KTChatWindow(myNickname);
+                                    if (minimizeWindow) chatRoom.Minimize();
+                                }
+                                ChatWindows.Add(chatRoom);
 
                                 return chatRoom;
                             }
@@ -373,25 +399,22 @@ namespace Less
                             }
 
                             /// <summary>
-                            /// 해당 이름을 가진 채팅방에서 대화를 시작합니다.
+                            /// 해당 이름을 가진 채팅방에서 대화를 시작합니다. (채팅방 이름은 정확히 일치해야 합니다)
                             /// 만약 내가 만든 오픈채팅방일 경우에는, 해당 방의 메뉴 아이콘 클릭 -> 채팅방 설정 클릭 후 채팅방 이름을 변경해주어야 정상 작동합니다.
                             /// </summary>
                             /// <param name="roomName">검색할 채팅방 이름</param>
-                            /// <param name="index">인덱스 값. 최솟값은 1이며, 검색된 채팅방 중 해당 번째에 나온 방에서 대화를 시작합니다.</param>
                             /// <param name="minimizeWindow">채팅 시작 후, 바로 채팅창을 최소화할지 여부</param>
-                            public KTChatWindow StartChattingAt(string roomName, int index = 1, bool minimizeWindow = false)
+                            public KTChatWindow StartChattingAt(string roomName, bool minimizeWindow = false)
                             {
-                                return _StartChattingAt(roomName, index, minimizeWindow, null);
+                                return _StartChattingAt(roomName, minimizeWindow, null);
                             }
 
-                            internal KTChatWindow _StartChattingAt(string roomName, int index, bool minimizeWindow, KTChatWindow previousWindow)
+                            internal KTChatWindow _StartChattingAt(string roomName, bool minimizeWindow, KTChatWindow previousWindow)
                             {
                                 ClearSearchResult();
                                 SearchByRoomName(roomName);
                                 Windows.ClickInBackground(SearchResultListHandle, Windows.MouseButton.Left, FirstSearchItemX, FirstSearchItemY);
                                 Thread.Sleep(MouseClickInterval);
-                                for (int i = 1; i < index; i++) Windows.PressKeyInBackground(SearchResultListHandle, Windows.KeyCode.VK_DOWN);
-                                Thread.Sleep(KeyPressInterval);
                                 KTChatWindow chatRoom = null;
                                 lock (ChatWindows)
                                 {
@@ -399,11 +422,11 @@ namespace Less
                                     while (!IsChatRoomOpen(roomName)) Thread.Sleep(ProgressCheckInterval);
                                     if (previousWindow == null)
                                     {
-                                        chatRoom = new KTChatWindow(roomName, index);
+                                        chatRoom = new KTChatWindow(roomName);
                                         if (minimizeWindow) chatRoom.Minimize();
                                         ChatWindows.Add(chatRoom);
                                     }
-                                    else chatRoom = new KTChatWindow(roomName, index, false);
+                                    else chatRoom = new KTChatWindow(roomName, false);
                                 }
                                 ClearSearchResult();
 
@@ -431,7 +454,6 @@ namespace Less
                     public class KTChatWindow : IDisposable
                     {
                         public string RoomName { get; }
-                        internal int SearchIndex { get; }
                         public int TaskCheckInterval { get; set; }
                         internal IntPtr RootHandle { get; set; }
                         internal IntPtr EditMessageHandle { get; set; }
@@ -443,16 +465,15 @@ namespace Less
                         Task CurrentTask = null;
                         Message[] Messages = null;
 
-                        internal KTChatWindow(string roomName, int searchIndex) : this(roomName, searchIndex, true, DefaultChattingCheckInterval) { }
+                        internal KTChatWindow(string roomName) : this(roomName, true, DefaultChattingCheckInterval) { }
 
-                        internal KTChatWindow(string roomName, int searchIndex, int taskCheckInterval) : this(roomName, searchIndex, true, taskCheckInterval) { }
+                        internal KTChatWindow(string roomName, int taskCheckInterval) : this(roomName, true, taskCheckInterval) { }
 
-                        internal KTChatWindow(string roomName, int searchIndex, bool useTaskChecker) : this(roomName, searchIndex, useTaskChecker, DefaultChattingCheckInterval) { }
+                        internal KTChatWindow(string roomName, bool useTaskChecker) : this(roomName, useTaskChecker, DefaultChattingCheckInterval) { }
 
-                        internal KTChatWindow(string roomName, int searchIndex, bool useTaskChecker, int taskCheckInterval)
+                        internal KTChatWindow(string roomName, bool useTaskChecker, int taskCheckInterval)
                         {
                             RoomName = roomName;
-                            SearchIndex = searchIndex;
                             TaskCheckInterval = taskCheckInterval;
                             RootHandle = Windows.FindWindow(ChatWindowClass, roomName);
                             EditMessageHandle = Windows.GetWindow(RootHandle, Windows.GW_CHILD);
@@ -737,7 +758,7 @@ namespace Less
                         {
                             if (IsOpen()) _Close();
                             MainWindow.ChangeTabTo(MainWindowTab.Chatting);
-                            KTChatWindow newWindowInfo = MainWindow.Chatting._StartChattingAt(RoomName, SearchIndex, minimizeWindow, this);
+                            KTChatWindow newWindowInfo = MainWindow.Chatting._StartChattingAt(RoomName, minimizeWindow, this);
                             RootHandle = newWindowInfo.RootHandle;
                             EditMessageHandle = newWindowInfo.EditMessageHandle;
                             SearchWordsHandle = newWindowInfo.SearchWordsHandle;
@@ -807,7 +828,6 @@ namespace Less
                                 hDialog = hDialogList[i];
                                 hWndTemp = Windows.GetWindow(hDialog, Windows.GW_CHILD); // First Child => EVA_ChildWindow
                                 if (!Windows.GetClassName(hWndTemp).Equals(EmoticonFirstChildClass)) continue;
-                                Console.WriteLine(i + " / " + (hDialogList.Count - 1));
                                 hWndTemp = Windows.GetWindow(hWndTemp, Windows.GW_CHILD); // Second Child => EVA_ChildWindow_Dblclk / _EVA_CustomScrollCtrl / EVA_VH_ListControl_Dblclk 셋 중 하나
                                 string secondChildClassName = Windows.GetClassName(hWndTemp);
                                 if (secondChildClassName.Equals(EmoticonSecondChildClass1) ||
