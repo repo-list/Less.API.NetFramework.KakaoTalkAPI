@@ -32,7 +32,7 @@ An automation API which is applicable to the software "KakaoTalk for Windows" cr
 
 > FriendsTab.StartChattingWith() / ChattingTab.StartChattingAt() -> Deleted way to find a chat using index parameter (perfect way to achieve this not implemented currently)
 
-> FriendsTab.StartChattingWith() / ChattingTab.StartChattingAt() -> index를 통해 찾는 기능 제거 (현재 완벽한 로직이 구현되지 않은 상태)
+:: FriendsTab.StartChattingWith() / ChattingTab.StartChattingAt() -> index를 통해 찾는 기능 제거 (현재 완벽한 로직이 구현되지 않은 상태)
 
 
 > FriendsTab -> Added StartChattingWithMyself(string myNickname) method.
