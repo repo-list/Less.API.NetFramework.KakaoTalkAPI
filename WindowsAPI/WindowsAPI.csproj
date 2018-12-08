@@ -7,7 +7,7 @@
     <ProjectGuid>{FED09D00-F2EA-4188-ABA5-9D7347BFFB5F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>WindowsAPI</RootNamespace>
+    <RootNamespace>Less.API.NetFramework.WindowsAPI</RootNamespace>
     <AssemblyName>WindowsAPI</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
