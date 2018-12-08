@@ -9,8 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsAPI", "WindowsAPI\Wi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleApplication", "SampleApplication\SampleApplication.csproj", "{04D9E401-9C19-4A56-9E8B-4340FAE19245}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClipboardManagerAPI", "ClipboardManagerAPI\ClipboardManagerAPI.csproj", "{EB92DB69-9FAB-4464-835B-C63846737174}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,10 +27,6 @@ Global
 		{04D9E401-9C19-4A56-9E8B-4340FAE19245}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{04D9E401-9C19-4A56-9E8B-4340FAE19245}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{04D9E401-9C19-4A56-9E8B-4340FAE19245}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EB92DB69-9FAB-4464-835B-C63846737174}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EB92DB69-9FAB-4464-835B-C63846737174}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EB92DB69-9FAB-4464-835B-C63846737174}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EB92DB69-9FAB-4464-835B-C63846737174}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

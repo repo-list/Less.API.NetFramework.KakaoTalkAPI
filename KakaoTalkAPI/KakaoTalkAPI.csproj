@@ -7,7 +7,7 @@
     <ProjectGuid>{BD0427C4-BA2A-48F8-8329-11574735F961}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>KakaoTalkAPI</RootNamespace>
+    <RootNamespace>Less.API.NetFramework.KakaoTalkAPI</RootNamespace>
     <AssemblyName>KakaoTalkAPI</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -33,6 +33,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -41,14 +42,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClipboardManager.cs" />
     <Compile Include="KakaoTalk.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ClipboardManagerAPI\ClipboardManagerAPI.csproj">
-      <Project>{eb92db69-9fab-4464-835b-c63846737174}</Project>
-      <Name>ClipboardManagerAPI</Name>
-    </ProjectReference>
     <ProjectReference Include="..\WindowsAPI\WindowsAPI.csproj">
       <Project>{fed09d00-f2ea-4188-aba5-9d7347bffb5f}</Project>
       <Name>WindowsAPI</Name>
