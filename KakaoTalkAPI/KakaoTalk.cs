@@ -30,6 +30,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Collections.Generic;
 using Less.API.NetFramework.WindowsAPI;
+using System.Runtime.InteropServices;
 
 namespace Less.API.NetFramework.KakaoTalkAPI
 {
@@ -445,8 +446,16 @@ namespace Less.API.NetFramework.KakaoTalkAPI
         /// </summary>
         public class KTChatWindow : IDisposable
         {
+            /// <summary>
+            /// 현재 채팅방의 이름을 담고 있습니다.
+            /// </summary>
             public string RoomName { get; }
+
+            /// <summary>
+            /// 작업 큐에 남아 있는 작업이 없을 경우 해당 시간만큼 기다렸다가 다시 검사합니다.
+            /// </summary>
             public int TaskCheckInterval { get; set; }
+
             internal IntPtr RootHandle { get; set; }
             internal IntPtr EditMessageHandle { get; set; }
             internal IntPtr SearchWordsHandle { get; set; }
@@ -475,7 +484,6 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                 if (useTaskChecker)
                 {
                     Checker = new Thread(new ThreadStart(RunTasks));
-                    Checker.SetApartmentState(ApartmentState.STA);
                     Checker.Start();
                 }
             }
@@ -521,7 +529,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                 Tasks.Add(new Task(TaskType.SendImageUsingClipboard, imagePath));
             }
 
-            private bool _SendImageUsingClipboard(string imagePath)
+            private bool _SendImageUsingClipboard(string imagePath, bool backupClipboardData)
             {
                 if (!IsOpen()) return false;
                 bool result = true;
@@ -531,7 +539,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                     IntPtr hMainWindow = Windows.FindWindow(MainWindowClass, MainWindowTitle);
                     lock (Clipboard)
                     {
-                        ClipboardManager.BackupData();
+                        if (backupClipboardData) ClipboardManager.BackupData();
                         ClipboardManager.SetImage(imagePath);
                     }
                     lock (ChatWindows)
@@ -559,9 +567,9 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                             Thread.Sleep(PostDelay);
                         }
                     }
-                    lock (Clipboard) { ClipboardManager.RestoreData(); }
+                    if (backupClipboardData) lock (Clipboard) { ClipboardManager.RestoreData(); }
                 }
-                catch (ClipboardManager.CannotOpenException e) { result = false; }
+                catch (ClipboardManager.CannotOpenException) { result = false; }
 
                 return result;
             }
@@ -688,7 +696,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                 return Messages;
             }
 
-            private Message[] _GetMessagesUsingClipboard()
+            private Message[] _GetMessagesUsingClipboard(bool backupClipboardData)
             {
                 Windows.SendMessage(ChatListHandle, 0x7E9, 0x65, 0); // 메시지 전체 선택
                 string messageString = null;
@@ -699,12 +707,12 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                 {
                     try
                     {
-                        ClipboardManager.BackupData();
+                        if (backupClipboardData) ClipboardManager.BackupData();
                         Windows.SendMessage(ChatListHandle, 0x7E9, 0x64, 0); // 메시지 복사
                         messageString = ClipboardManager.GetText();
-                        ClipboardManager.RestoreData();
+                        if (backupClipboardData) ClipboardManager.RestoreData();
                     }
-                    catch (ClipboardManager.CannotOpenException e) { isClipboardAvailable = false; }
+                    catch (ClipboardManager.CannotOpenException) { isClipboardAvailable = false; }
                 }
 
                 if (isClipboardAvailable)
@@ -777,7 +785,9 @@ namespace Less.API.NetFramework.KakaoTalkAPI
             /// </summary>
             public void Minimize()
             {
-
+                while (!DoesWindowHaveSize()) Thread.Sleep(ProgressCheckInterval);
+                var rect = Windows.GetWindowRect(RootHandle);
+                Windows.ClickInBackground(RootHandle, Windows.MouseButton.Left, (short)((rect.right - rect.left) - 63), 18);
             }
 
             /// <summary>
@@ -785,7 +795,32 @@ namespace Less.API.NetFramework.KakaoTalkAPI
             /// </summary>
             public void Restore()
             {
+                Windows.ShowWindow(RootHandle, Windows.SW_RESTORE);
+                while (!DoesWindowHaveSize()) Thread.Sleep(ProgressCheckInterval);
+                Windows.SetForegroundWindow(RootHandle);
+                Windows.BringWindowToTop(RootHandle);
+            }
 
+            private bool DoesWindowHaveSize()
+            {
+                var rect = Windows.GetWindowRect(RootHandle);
+                return rect.right - rect.left > 0 && rect.bottom - rect.top > 0;
+            }
+
+            /// <summary>
+            /// 현재 남아 있는 작업이 있는지 여부를 반환합니다.
+            /// </summary>
+            public bool HasTasks()
+            {
+                return Tasks.Count > 0 ? true : false;
+            }
+
+            /// <summary>
+            /// 현재 남아 있는 작업의 개수를 반환합니다.
+            /// </summary>
+            public int GetTaskCount()
+            {
+                return Tasks.Count;
             }
 
             // private 메서드 목록
@@ -864,36 +899,39 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                     if (Tasks.Count > 0)
                     {
                         CurrentTask = Tasks[0];
-                        switch (CurrentTask.Type)
+                        if (CurrentTask != null)
                         {
-                            case TaskType.SendText:
-                                _SendText((string)CurrentTask.Parameter);
-                                break;
-                            case TaskType.SendImageUsingClipboard:
-                                _SendImageUsingClipboard((string)CurrentTask.Parameter);
-                                break;
-                            case TaskType.SendEmoticon:
-                                _SendEmoticon((Emoticon)CurrentTask.Parameter);
-                                break;
-                            case TaskType.GetMessagesUsingClipboard:
-                                Messages = _GetMessagesUsingClipboard();
-                                lock (this) Monitor.Pulse(this);
-                                break;
-                            case TaskType.Close:
-                                _Close();
-                                break;
-                            case TaskType.Reopen:
-                                _Reopen((bool)CurrentTask.Parameter);
-                                lock (this) Monitor.Pulse(this);
-                                break;
-                            case TaskType.Dispose:
-                                _Dispose();
-                                break;
+                            switch (CurrentTask.Type)
+                            {
+                                case TaskType.SendText:
+                                    _SendText((string)CurrentTask.Parameter);
+                                    break;
+                                case TaskType.SendImageUsingClipboard:
+                                    _SendImageUsingClipboard((string)CurrentTask.Parameter, false);
+                                    break;
+                                case TaskType.SendEmoticon:
+                                    _SendEmoticon((Emoticon)CurrentTask.Parameter);
+                                    break;
+                                case TaskType.GetMessagesUsingClipboard:
+                                    Messages = _GetMessagesUsingClipboard(false);
+                                    lock (this) Monitor.Pulse(this);
+                                    break;
+                                case TaskType.Close:
+                                    _Close();
+                                    break;
+                                case TaskType.Reopen:
+                                    _Reopen((bool)CurrentTask.Parameter);
+                                    lock (this) Monitor.Pulse(this);
+                                    break;
+                                case TaskType.Dispose:
+                                    _Dispose();
+                                    break;
+                            }
+                            Tasks.RemoveAt(0);
+                            CurrentTask = null;
                         }
-                        Tasks.RemoveAt(0);
-                        CurrentTask = null;
                     }
-                    else Thread.Sleep(TaskCheckInterval);
+                    Thread.Sleep(TaskCheckInterval);
                 }
                 Console.WriteLine($"Thread 종료 ({RoomName})");
             }
@@ -940,7 +978,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
             /// <summary>
             /// 해당 메시지를 보낸 유저의 이름
             /// </summary>
-            public string Username { get; }
+            public string UserName { get; }
             /// <summary>
             /// 해당 메시지의 내용
             /// </summary>
@@ -949,8 +987,8 @@ namespace Less.API.NetFramework.KakaoTalkAPI
             public Message(string fullContent)
             {
                 Type = GetMessageType(fullContent);
-                Username = GetUserName(fullContent, Type);
-                Content = GetContent(fullContent, Type, Username);
+                UserName = GetUserName(fullContent, Type);
+                Content = GetContent(fullContent, Type, UserName);
             }
 
             public override string ToString()
@@ -972,7 +1010,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                         break;
                 }
 
-                return $"Type : {type}, Username : {Username}, Content : {Content}";
+                return $"Type : {type}, Username : {UserName}, Content : {Content}";
             }
 
             private static MessageType GetMessageType(string fullContent)
@@ -1003,7 +1041,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                     }
                 }
 
-                if (fullContent.IndexOf("님이 들어왔습니다.") == fullContent.Length - 10)
+                if (fullContent.Contains("님이 들어왔습니다.") && fullContent.IndexOf("님이 들어왔습니다.") == fullContent.Length - 10)
                 {
                     if (!(fullContent.IndexOf("[") == 0 && fullContent.Contains("] [오") && fullContent.Contains("] ")))
                     {
@@ -1011,7 +1049,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                     }
                 }
 
-                if (fullContent.IndexOf("나갔습니다.") == fullContent.Length - 6)
+                if (fullContent.Contains("나갔습니다.") && fullContent.IndexOf("나갔습니다.") == fullContent.Length - 6)
                 {
                     if (!(fullContent.IndexOf("[") == 0 && fullContent.Contains("] [오") && fullContent.Contains("] ")))
                     {

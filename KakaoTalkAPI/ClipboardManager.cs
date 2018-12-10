@@ -16,7 +16,9 @@ namespace Less.API.NetFramework.KakaoTalkAPI
         public static bool HasDataToRestore = false;
         static uint Format;
         static object Data;
-        static readonly IntPtr ClipboardOwner = IntPtr.Zero;
+        //static readonly IntPtr ClipboardOwner = IntPtr.Zero;
+        static readonly IntPtr ClipboardOwner = System.Diagnostics.Process.GetCurrentProcess().MainWindowHandle;
+        static IntPtr MemoryHandle = IntPtr.Zero;
 
         /// <summary>
         /// 현재 클립보드에 저장되어 있는 데이터를 백업합니다. 클립보드 열기 요청 실패 시 ClipboardManager.CannotOpenException 예외가 발생합니다.
@@ -35,12 +37,15 @@ namespace Less.API.NetFramework.KakaoTalkAPI
             {
                 case Windows.CF_TEXT:
                     Data = Marshal.PtrToStringAnsi(pointer);
+                    MemoryHandle = Marshal.StringToHGlobalAnsi((string)Data);
                     break;
                 case Windows.CF_UNICODETEXT:
                     Data = Marshal.PtrToStringUni(pointer);
+                    MemoryHandle = Marshal.StringToHGlobalUni((string)Data);
                     break;
                 case Windows.CF_BITMAP:
                     Data = Image.FromHbitmap(pointer);
+                    MemoryHandle = ((Bitmap)Data).GetHbitmap();
                     break;
             }
             Windows.CloseClipboard();
@@ -54,31 +59,33 @@ namespace Less.API.NetFramework.KakaoTalkAPI
         public static void RestoreData()
         {
             if (!HasDataToRestore) return;
-            IntPtr hMemory = IntPtr.Zero;
 
-            bool isClipboardOpen = Windows.OpenClipboard(ClipboardOwner);
-            if (!isClipboardOpen) throw new CannotOpenException();
+            if (Format == Windows.CF_TEXT || Format == Windows.CF_UNICODETEXT)
+            {
+                bool isClipboardOpen = Windows.OpenClipboard(ClipboardOwner);
+                if (!isClipboardOpen) throw new CannotOpenException();
+            }
 
             switch (Format)
             {
                 case Windows.CF_TEXT:
-                    hMemory = Marshal.StringToHGlobalAnsi((string)Data);
-                    Windows.SetClipboardData(Format, hMemory);
+                    Windows.SetClipboardData(Format, MemoryHandle);
                     break;
                 case Windows.CF_UNICODETEXT:
-                    hMemory = Marshal.StringToHGlobalUni((string)Data);
-                    Windows.SetClipboardData(Format, hMemory);
+                    Windows.SetClipboardData(Format, MemoryHandle);
                     break;
                 case Windows.CF_BITMAP:
                 case Windows.CF_DIB:
                     Format = Windows.CF_BITMAP;
-                    hMemory = ((Bitmap)Data).GetHbitmap();
-                    SetImage(hMemory);
+                    SetImage(MemoryHandle);
+                    (Data as Bitmap).Dispose();
                     break;
             }
+            if (Format == Windows.CF_TEXT || Format == Windows.CF_UNICODETEXT) Windows.CloseClipboard();
 
-            Windows.CloseClipboard();
-
+            Windows.DeleteObject(MemoryHandle);
+            Data = null;
+            MemoryHandle = IntPtr.Zero;
             HasDataToRestore = false;
         }
 
@@ -119,16 +126,18 @@ namespace Less.API.NetFramework.KakaoTalkAPI
 
         /// <summary>
         /// 클립보드에 이미지를 저장합니다. 클립보드 열기 요청 실패 시 ClipboardManager.CannotOpenException 예외가 발생합니다.
+        /// 또한 이 메서드를 짧은 시간 간격을 두고 주기적으로 호출할 경우 ExternalException 및 ContextSwitchDeadLock 현상이 발생할 수 있습니다.
+        /// 따라서 이 메서드를 반복문 내에서 사용할 때는 주의가 필요합니다.
         /// </summary>
         /// <param name="imagePath">저장할 이미지의 원본 파일 경로</param>
         public static void SetImage(string imagePath)
         {
-            using (Bitmap image = (Bitmap)Image.FromFile(imagePath)) { _SetImage(image); }
+            using (Bitmap image = (Bitmap)Image.FromFile(imagePath)) _SetImage(image);
         }
 
         public static void SetImage(IntPtr hBitmap)
         {
-            using (Bitmap image = Image.FromHbitmap(hBitmap)) { _SetImage(image); }
+            using (Bitmap image = Image.FromHbitmap(hBitmap)) _SetImage(image);
         }
 
         private static void _SetImage(Bitmap image)
@@ -155,6 +164,8 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                 if (!isClipboardOpen)
                 {
                     Windows.DeleteObject(hDestBitmap);
+                    Windows.DeleteObject(hSourceDC);
+                    Windows.DeleteObject(hSourceBitmap);
                     throw new CannotOpenException();
                 }
                 Windows.EmptyClipboard();
@@ -162,6 +173,8 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                 Windows.CloseClipboard();
 
                 Windows.DeleteObject(hDestBitmap);
+                Windows.DeleteObject(hSourceDC);
+                Windows.DeleteObject(hSourceBitmap);
             }
         }
 
