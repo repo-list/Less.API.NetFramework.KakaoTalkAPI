@@ -47,8 +47,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\WindowsAPI\WindowsAPI.csproj">
-      <Project>{fed09d00-f2ea-4188-aba5-9d7347bffb5f}</Project>
+    <ProjectReference Include="..\..\WindowsAPI\WindowsAPI\WindowsAPI.csproj">
+      <Project>{50d36596-4f67-440c-8cc7-ec49af42b478}</Project>
       <Name>WindowsAPI</Name>
     </ProjectReference>
   </ItemGroup>

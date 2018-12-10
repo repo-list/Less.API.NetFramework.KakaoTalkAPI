@@ -379,7 +379,7 @@ namespace SampleApplication
             {
                 message = chatWindows[i].GetMessagesUsingClipboard();
                 buffer.Clear();
-                for (int j = 0; j < message.Length; j++) buffer.Append($"메시지 유형 : {message[j].Type}, 유저 이름 : {message[j].Username}, 내용 : {message[j].Content} + \n");
+                for (int j = 0; j < message.Length; j++) buffer.Append($"메시지 유형 : {message[j].Type}, 유저 이름 : {message[j].UserName}, 내용 : {message[j].Content} + \n");
                 chatWindows[i].SendText(buffer.ToString());
             }
             Thread.Sleep(1000);
@@ -399,7 +399,7 @@ namespace SampleApplication
             {
                 message = chatWindows[i].GetMessagesUsingClipboard();
                 buffer.Clear();
-                for (int j = 0; j < message.Length; j++) buffer.Append($"메시지 ({j+1} / {message.Length})  유형 : {message[j].Type}, 유저 이름 : {message[j].Username}, 내용 : {message[j].Content} + \n");
+                for (int j = 0; j < message.Length; j++) buffer.Append($"메시지 ({j+1} / {message.Length})  유형 : {message[j].Type}, 유저 이름 : {message[j].UserName}, 내용 : {message[j].Content} + \n");
                 chatWindows[i].SendText(buffer.ToString());
             }
             Thread.Sleep(1000);
