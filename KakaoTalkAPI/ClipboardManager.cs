@@ -27,28 +27,28 @@ namespace Less.API.NetFramework.KakaoTalkAPI
         {
             Format = 0;
 
-            bool isClipboardOpen = Windows.OpenClipboard(ClipboardOwner);
+            bool isClipboardOpen = WinAPI.OpenClipboard(ClipboardOwner);
             if (!isClipboardOpen) throw new CannotOpenException();
-            do { Format = Windows.EnumClipboardFormats(Format); }
+            do { Format = WinAPI.EnumClipboardFormats(Format); }
             while (Format >= 0x200 || Format == 0);
 
-            IntPtr pointer = Windows.GetClipboardData(Format);
+            IntPtr pointer = WinAPI.GetClipboardData(Format);
             switch (Format)
             {
-                case Windows.CF_TEXT:
+                case WinAPI.CF_TEXT:
                     Data = Marshal.PtrToStringAnsi(pointer);
                     MemoryHandle = Marshal.StringToHGlobalAnsi((string)Data);
                     break;
-                case Windows.CF_UNICODETEXT:
+                case WinAPI.CF_UNICODETEXT:
                     Data = Marshal.PtrToStringUni(pointer);
                     MemoryHandle = Marshal.StringToHGlobalUni((string)Data);
                     break;
-                case Windows.CF_BITMAP:
+                case WinAPI.CF_BITMAP:
                     Data = Image.FromHbitmap(pointer);
                     MemoryHandle = ((Bitmap)Data).GetHbitmap();
                     break;
             }
-            Windows.CloseClipboard();
+            WinAPI.CloseClipboard();
 
             HasDataToRestore = true;
         }
@@ -60,30 +60,30 @@ namespace Less.API.NetFramework.KakaoTalkAPI
         {
             if (!HasDataToRestore) return;
 
-            if (Format == Windows.CF_TEXT || Format == Windows.CF_UNICODETEXT)
+            if (Format == WinAPI.CF_TEXT || Format == WinAPI.CF_UNICODETEXT)
             {
-                bool isClipboardOpen = Windows.OpenClipboard(ClipboardOwner);
+                bool isClipboardOpen = WinAPI.OpenClipboard(ClipboardOwner);
                 if (!isClipboardOpen) throw new CannotOpenException();
             }
 
             switch (Format)
             {
-                case Windows.CF_TEXT:
-                    Windows.SetClipboardData(Format, MemoryHandle);
+                case WinAPI.CF_TEXT:
+                    WinAPI.SetClipboardData(Format, MemoryHandle);
                     break;
-                case Windows.CF_UNICODETEXT:
-                    Windows.SetClipboardData(Format, MemoryHandle);
+                case WinAPI.CF_UNICODETEXT:
+                    WinAPI.SetClipboardData(Format, MemoryHandle);
                     break;
-                case Windows.CF_BITMAP:
-                case Windows.CF_DIB:
-                    Format = Windows.CF_BITMAP;
+                case WinAPI.CF_BITMAP:
+                case WinAPI.CF_DIB:
+                    Format = WinAPI.CF_BITMAP;
                     SetImage(MemoryHandle);
                     (Data as Bitmap).Dispose();
                     break;
             }
-            if (Format == Windows.CF_TEXT || Format == Windows.CF_UNICODETEXT) Windows.CloseClipboard();
+            if (Format == WinAPI.CF_TEXT || Format == WinAPI.CF_UNICODETEXT) WinAPI.CloseClipboard();
 
-            Windows.DeleteObject(MemoryHandle);
+            WinAPI.DeleteObject(MemoryHandle);
             Data = null;
             MemoryHandle = IntPtr.Zero;
             HasDataToRestore = false;
@@ -96,16 +96,16 @@ namespace Less.API.NetFramework.KakaoTalkAPI
         {
             string text = null;
 
-            bool isClipboardOpen = Windows.OpenClipboard(ClipboardOwner);
+            bool isClipboardOpen = WinAPI.OpenClipboard(ClipboardOwner);
             if (!isClipboardOpen) throw new CannotOpenException();
-            IntPtr pointer = Windows.GetClipboardData(Windows.CF_UNICODETEXT);
+            IntPtr pointer = WinAPI.GetClipboardData(WinAPI.CF_UNICODETEXT);
             if (pointer == IntPtr.Zero)
             {
-                pointer = Windows.GetClipboardData(Windows.CF_TEXT);
+                pointer = WinAPI.GetClipboardData(WinAPI.CF_TEXT);
                 if (pointer != IntPtr.Zero) text = Marshal.PtrToStringAnsi(pointer);
             }
             else text = Marshal.PtrToStringUni(pointer);
-            Windows.CloseClipboard();
+            WinAPI.CloseClipboard();
 
             return text;
         }
@@ -116,12 +116,12 @@ namespace Less.API.NetFramework.KakaoTalkAPI
         /// <param name="text">저장할 텍스트</param>
         public static void SetText(string text)
         {
-            bool isClipboardOpen = Windows.OpenClipboard(ClipboardOwner);
+            bool isClipboardOpen = WinAPI.OpenClipboard(ClipboardOwner);
             if (!isClipboardOpen) throw new CannotOpenException();
-            Windows.EmptyClipboard();
-            Windows.SetClipboardData(Windows.CF_TEXT, Marshal.StringToHGlobalAnsi(text));
-            Windows.SetClipboardData(Windows.CF_UNICODETEXT, Marshal.StringToHGlobalUni(text));
-            Windows.CloseClipboard();
+            WinAPI.EmptyClipboard();
+            WinAPI.SetClipboardData(WinAPI.CF_TEXT, Marshal.StringToHGlobalAnsi(text));
+            WinAPI.SetClipboardData(WinAPI.CF_UNICODETEXT, Marshal.StringToHGlobalUni(text));
+            WinAPI.CloseClipboard();
         }
 
         /// <summary>
@@ -144,37 +144,37 @@ namespace Less.API.NetFramework.KakaoTalkAPI
         {
             using (Graphics graphics = Graphics.FromImage(image))
             {
-                IntPtr hScreenDC = Windows.GetWindowDC(IntPtr.Zero); // 기본적인 Device Context의 속성들을 카피하기 위한 작업
-                IntPtr hDestDC = Windows.CreateCompatibleDC(hScreenDC);
-                IntPtr hDestBitmap = Windows.CreateCompatibleBitmap(hScreenDC, image.Width, image.Height); // destDC와 destBitmap 모두 반드시 screenDC의 속성들을 기반으로 해야 함.
-                IntPtr hPrevDestObject = Windows.SelectObject(hDestDC, hDestBitmap);
+                IntPtr hScreenDC = WinAPI.GetWindowDC(IntPtr.Zero); // 기본적인 Device Context의 속성들을 카피하기 위한 작업
+                IntPtr hDestDC = WinAPI.CreateCompatibleDC(hScreenDC);
+                IntPtr hDestBitmap = WinAPI.CreateCompatibleBitmap(hScreenDC, image.Width, image.Height); // destDC와 destBitmap 모두 반드시 screenDC의 속성들을 기반으로 해야 함.
+                IntPtr hPrevDestObject = WinAPI.SelectObject(hDestDC, hDestBitmap);
 
                 IntPtr hSourceDC = graphics.GetHdc();
                 IntPtr hSourceBitmap = image.GetHbitmap();
-                IntPtr hPrevSourceObject = Windows.SelectObject(hSourceDC, hSourceBitmap);
+                IntPtr hPrevSourceObject = WinAPI.SelectObject(hSourceDC, hSourceBitmap);
 
-                Windows.BitBlt(hDestDC, 0, 0, image.Width, image.Height, hSourceDC, 0, 0, Windows.SRCCOPY);
+                WinAPI.BitBlt(hDestDC, 0, 0, image.Width, image.Height, hSourceDC, 0, 0, WinAPI.SRCCOPY);
 
-                Windows.DeleteObject(Windows.SelectObject(hSourceDC, hPrevSourceObject));
-                Windows.SelectObject(hDestDC, hPrevDestObject); // 리턴값 : hDestBitmap
+                WinAPI.DeleteObject(WinAPI.SelectObject(hSourceDC, hPrevSourceObject));
+                WinAPI.SelectObject(hDestDC, hPrevDestObject); // 리턴값 : hDestBitmap
                 graphics.ReleaseHdc(hSourceDC);
-                Windows.DeleteDC(hDestDC);
+                WinAPI.DeleteDC(hDestDC);
 
-                bool isClipboardOpen = Windows.OpenClipboard(ClipboardOwner);
+                bool isClipboardOpen = WinAPI.OpenClipboard(ClipboardOwner);
                 if (!isClipboardOpen)
                 {
-                    Windows.DeleteObject(hDestBitmap);
-                    Windows.DeleteObject(hSourceDC);
-                    Windows.DeleteObject(hSourceBitmap);
+                    WinAPI.DeleteObject(hDestBitmap);
+                    WinAPI.DeleteObject(hSourceDC);
+                    WinAPI.DeleteObject(hSourceBitmap);
                     throw new CannotOpenException();
                 }
-                Windows.EmptyClipboard();
-                Windows.SetClipboardData(Windows.CF_BITMAP, hDestBitmap);
-                Windows.CloseClipboard();
+                WinAPI.EmptyClipboard();
+                WinAPI.SetClipboardData(WinAPI.CF_BITMAP, hDestBitmap);
+                WinAPI.CloseClipboard();
 
-                Windows.DeleteObject(hDestBitmap);
-                Windows.DeleteObject(hSourceDC);
-                Windows.DeleteObject(hSourceBitmap);
+                WinAPI.DeleteObject(hDestBitmap);
+                WinAPI.DeleteObject(hSourceDC);
+                WinAPI.DeleteObject(hSourceBitmap);
             }
         }
 

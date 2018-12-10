@@ -115,7 +115,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
         /// </summary>
         public static bool IsWindowOpen()
         {
-            IntPtr hMainWindow = Windows.FindWindow(MainWindowClass, MainWindowTitle);
+            IntPtr hMainWindow = WinAPI.FindWindow(MainWindowClass, MainWindowTitle);
             return hMainWindow != IntPtr.Zero ? true : false;
         }
 
@@ -124,10 +124,10 @@ namespace Less.API.NetFramework.KakaoTalkAPI
         /// </summary>
         public static bool IsLoggedIn()
         {
-            IntPtr hLoginWindow = Windows.FindWindow(LoginWindowClass, MainWindowTitle);
-            IntPtr hMainWindow = Windows.FindWindow(MainWindowClass, MainWindowTitle);
-            IntPtr hAdArea = Windows.GetWindow(hMainWindow, Windows.GW_CHILD);
-            for (int i = 0; i < 2; i++) hAdArea = Windows.GetWindow(hAdArea, Windows.GW_HWNDNEXT);
+            IntPtr hLoginWindow = WinAPI.FindWindow(LoginWindowClass, MainWindowTitle);
+            IntPtr hMainWindow = WinAPI.FindWindow(MainWindowClass, MainWindowTitle);
+            IntPtr hAdArea = WinAPI.GetWindow(hMainWindow, WinAPI.GW_CHILD);
+            for (int i = 0; i < 2; i++) hAdArea = WinAPI.GetWindow(hAdArea, WinAPI.GW_HWNDNEXT);
 
             return (IsWindowOpen() && hLoginWindow == IntPtr.Zero && hAdArea != IntPtr.Zero) ? true : false;
         }
@@ -137,7 +137,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
         /// </summary>
         private static bool IsLoginWindowLoaded()
         {
-            IntPtr hLoginWindow = Windows.FindWindow(LoginWindowClass, MainWindowTitle);
+            IntPtr hLoginWindow = WinAPI.FindWindow(LoginWindowClass, MainWindowTitle);
             return hLoginWindow != IntPtr.Zero ? true : false;
         }
 
@@ -147,7 +147,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
         /// <param name="roomName">검사할 채팅방의 이름</param>
         public static bool IsChatRoomOpen(string roomName)
         {
-            IntPtr hChatRoom = Windows.FindWindow(ChatWindowClass, roomName);
+            IntPtr hChatRoom = WinAPI.FindWindow(ChatWindowClass, roomName);
             return hChatRoom != IntPtr.Zero ? true : false;
         }
 
@@ -177,16 +177,16 @@ namespace Less.API.NetFramework.KakaoTalkAPI
             // 로그인 패널이 정상적으로 열릴 때까지 대기
             while (!IsLoginWindowLoaded()) Thread.Sleep(ProgressCheckInterval);
 
-            IntPtr hLoginWindow = Windows.FindWindow(LoginWindowClass, MainWindowTitle);
-            IntPtr hEditEmail = Windows.GetWindow(hLoginWindow, Windows.GW_CHILD);
-            IntPtr hEditPassword = Windows.GetWindow(hEditEmail, Windows.GW_HWNDNEXT);
+            IntPtr hLoginWindow = WinAPI.FindWindow(LoginWindowClass, MainWindowTitle);
+            IntPtr hEditEmail = WinAPI.GetWindow(hLoginWindow, WinAPI.GW_CHILD);
+            IntPtr hEditPassword = WinAPI.GetWindow(hEditEmail, WinAPI.GW_HWNDNEXT);
 
             Thread.Sleep(UIChangeInterval);
 
-            Windows.SetEditText(hEditEmail, email, Windows.Encoding.Unicode);
-            Windows.SetEditText(hEditPassword, password, Windows.Encoding.Unicode);
+            WinAPI.SetEditText(hEditEmail, email, WinAPI.Encoding.Unicode);
+            WinAPI.SetEditText(hEditPassword, password, WinAPI.Encoding.Unicode);
             Thread.Sleep(ButtonActivateInterval);
-            Windows.PressKeyInBackground(hLoginWindow, Windows.KeyCode.VK_ENTER);
+            WinAPI.PressKeyInBackground(hLoginWindow, WinAPI.KeyCode.VK_ENTER);
             while (!IsLoggedIn()) Thread.Sleep(ProgressCheckInterval);
 
             InitializeAppSettings();
@@ -201,7 +201,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
         {
             if (!IsLoggedIn()) throw new NotLoggedInException();
 
-            IntPtr hMainWindow = Windows.FindWindow(MainWindowClass, MainWindowTitle);
+            IntPtr hMainWindow = WinAPI.FindWindow(MainWindowClass, MainWindowTitle);
             MainWindow = new KTMainWindow(hMainWindow);
 
             Initialized = true;
@@ -236,12 +236,12 @@ namespace Less.API.NetFramework.KakaoTalkAPI
             internal KTMainWindow(IntPtr hMainWindow)
             {
                 RootHandle = hMainWindow;
-                TabAreaHandle = Windows.GetWindow(hMainWindow, Windows.GW_CHILD);
-                for (int i = 0; i < 2; i++) AdAreaHandle = Windows.GetWindow(TabAreaHandle, Windows.GW_HWNDNEXT);
+                TabAreaHandle = WinAPI.GetWindow(hMainWindow, WinAPI.GW_CHILD);
+                for (int i = 0; i < 2; i++) AdAreaHandle = WinAPI.GetWindow(TabAreaHandle, WinAPI.GW_HWNDNEXT);
 
-                IntPtr hFriendTab = Windows.GetWindow(TabAreaHandle, Windows.GW_CHILD);
-                IntPtr hChattingTab = Windows.GetWindow(hFriendTab, Windows.GW_HWNDNEXT);
-                IntPtr hMoreTab = Windows.GetWindow(hChattingTab, Windows.GW_HWNDNEXT);
+                IntPtr hFriendTab = WinAPI.GetWindow(TabAreaHandle, WinAPI.GW_CHILD);
+                IntPtr hChattingTab = WinAPI.GetWindow(hFriendTab, WinAPI.GW_HWNDNEXT);
+                IntPtr hMoreTab = WinAPI.GetWindow(hChattingTab, WinAPI.GW_HWNDNEXT);
 
                 Friends = new FriendsTab(hFriendTab);
                 Chatting = new ChattingTab(hChattingTab);
@@ -254,8 +254,8 @@ namespace Less.API.NetFramework.KakaoTalkAPI
             /// <param name="targetTab">이동할 탭</param>
             public void ChangeTabTo(MainWindowTab targetTab)
             {
-                for (int i = 0; i < 2; i++) Windows.PressKeyInBackground(Friends.RootHandle, Windows.KeyCode.VK_LEFT); // 무조건 현재 탭을 1번으로 만들고 계산
-                for (int i = 1; i < (int)targetTab; i++) Windows.PressKeyInBackground(Friends.RootHandle, Windows.KeyCode.VK_RIGHT);
+                for (int i = 0; i < 2; i++) WinAPI.PressKeyInBackground(Friends.RootHandle, WinAPI.KeyCode.VK_LEFT); // 무조건 현재 탭을 1번으로 만들고 계산
+                for (int i = 1; i < (int)targetTab; i++) WinAPI.PressKeyInBackground(Friends.RootHandle, WinAPI.KeyCode.VK_RIGHT);
             }
 
             public class Tab
@@ -284,9 +284,9 @@ namespace Less.API.NetFramework.KakaoTalkAPI
 
                 internal FriendsTab(IntPtr hFriendTab) : base(hFriendTab)
                 {
-                    SearchHandle = Windows.GetWindow(hFriendTab, Windows.GW_CHILD);
-                    SearchResultListHandle = Windows.GetWindow(SearchHandle, Windows.GW_HWNDNEXT);
-                    FriendsListHandle = Windows.GetWindow(SearchResultListHandle, Windows.GW_HWNDNEXT);
+                    SearchHandle = WinAPI.GetWindow(hFriendTab, WinAPI.GW_CHILD);
+                    SearchResultListHandle = WinAPI.GetWindow(SearchHandle, WinAPI.GW_HWNDNEXT);
+                    FriendsListHandle = WinAPI.GetWindow(SearchResultListHandle, WinAPI.GW_HWNDNEXT);
                 }
 
                 /// <summary>
@@ -295,7 +295,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                 /// <param name="nickname">검색할 친구의 별명</param>
                 public void SearchByNickname(string nickname)
                 {
-                    Windows.SetEditText(SearchHandle, nickname, Windows.Encoding.Unicode);
+                    WinAPI.SetEditText(SearchHandle, nickname, WinAPI.Encoding.Unicode);
                     Thread.Sleep(UIChangeInterval);
                 }
 
@@ -304,7 +304,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                 /// </summary>
                 public void ClearSearchResult()
                 {
-                    Windows.SetEditText(SearchHandle, "", Windows.Encoding.Unicode);
+                    WinAPI.SetEditText(SearchHandle, "", WinAPI.Encoding.Unicode);
                     Thread.Sleep(UIChangeInterval);
                 }
 
@@ -317,12 +317,12 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                 {
                     ClearSearchResult();
                     SearchByNickname(nickname);
-                    Windows.ClickInBackground(SearchResultListHandle, Windows.MouseButton.Left, FirstSearchItemX, FirstSearchItemY);
+                    WinAPI.ClickInBackground(SearchResultListHandle, WinAPI.MouseButton.Left, FirstSearchItemX, FirstSearchItemY);
                     Thread.Sleep(MouseClickInterval);
                     KTChatWindow chatRoom;
                     lock (ChatWindows)
                     {
-                        Windows.PressKeyInBackground(SearchResultListHandle, Windows.KeyCode.VK_ENTER);
+                        WinAPI.PressKeyInBackground(SearchResultListHandle, WinAPI.KeyCode.VK_ENTER);
                         while (!IsChatRoomOpen(nickname)) Thread.Sleep(ProgressCheckInterval);
                         chatRoom = new KTChatWindow(nickname);
                         if (minimizeWindow) chatRoom.Minimize();
@@ -339,7 +339,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                     KTChatWindow chatRoom;
                     lock (ChatWindows)
                     {
-                        Windows.DoubleClickInBackground(FriendsListHandle, Windows.MouseButton.Left, 86, 62);
+                        WinAPI.DoubleClickInBackground(FriendsListHandle, WinAPI.MouseButton.Left, 86, 62);
                         while (!IsChatRoomOpen(myNickname)) Thread.Sleep(ProgressCheckInterval);
                         chatRoom = new KTChatWindow(myNickname);
                         if (minimizeWindow) chatRoom.Minimize();
@@ -366,9 +366,9 @@ namespace Less.API.NetFramework.KakaoTalkAPI
 
                 internal ChattingTab(IntPtr hChattingTab) : base(hChattingTab)
                 {
-                    SearchHandle = Windows.GetWindow(hChattingTab, Windows.GW_CHILD);
-                    ChatRoomListHandle = Windows.GetWindow(SearchHandle, Windows.GW_HWNDNEXT);
-                    SearchResultListHandle = Windows.GetWindow(ChatRoomListHandle, Windows.GW_HWNDNEXT);
+                    SearchHandle = WinAPI.GetWindow(hChattingTab, WinAPI.GW_CHILD);
+                    ChatRoomListHandle = WinAPI.GetWindow(SearchHandle, WinAPI.GW_HWNDNEXT);
+                    SearchResultListHandle = WinAPI.GetWindow(ChatRoomListHandle, WinAPI.GW_HWNDNEXT);
                 }
 
                 /// <summary>
@@ -377,7 +377,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                 /// <param name="roomName">검색할 채팅방 이름</param>
                 public void SearchByRoomName(string roomName)
                 {
-                    Windows.SetEditText(SearchHandle, roomName, Windows.Encoding.Unicode);
+                    WinAPI.SetEditText(SearchHandle, roomName, WinAPI.Encoding.Unicode);
                     Thread.Sleep(UIChangeInterval);
                 }
 
@@ -386,7 +386,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                 /// </summary>
                 public void ClearSearchResult()
                 {
-                    Windows.SetEditText(SearchHandle, "", Windows.Encoding.Unicode);
+                    WinAPI.SetEditText(SearchHandle, "", WinAPI.Encoding.Unicode);
                     Thread.Sleep(UIChangeInterval);
                 }
 
@@ -405,12 +405,12 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                 {
                     ClearSearchResult();
                     SearchByRoomName(roomName);
-                    Windows.ClickInBackground(SearchResultListHandle, Windows.MouseButton.Left, FirstSearchItemX, FirstSearchItemY);
+                    WinAPI.ClickInBackground(SearchResultListHandle, WinAPI.MouseButton.Left, FirstSearchItemX, FirstSearchItemY);
                     Thread.Sleep(MouseClickInterval);
                     KTChatWindow chatRoom = null;
                     lock (ChatWindows)
                     {
-                        Windows.PressKeyInBackground(SearchResultListHandle, Windows.KeyCode.VK_ENTER);
+                        WinAPI.PressKeyInBackground(SearchResultListHandle, WinAPI.KeyCode.VK_ENTER);
                         while (!IsChatRoomOpen(roomName)) Thread.Sleep(ProgressCheckInterval);
                         if (previousWindow == null)
                         {
@@ -475,10 +475,10 @@ namespace Less.API.NetFramework.KakaoTalkAPI
             {
                 RoomName = roomName;
                 TaskCheckInterval = taskCheckInterval;
-                RootHandle = Windows.FindWindow(ChatWindowClass, roomName);
-                EditMessageHandle = Windows.GetWindow(RootHandle, Windows.GW_CHILD);
-                SearchWordsHandle = Windows.GetWindow(EditMessageHandle, Windows.GW_HWNDNEXT);
-                ChatListHandle = Windows.GetWindow(SearchWordsHandle, Windows.GW_HWNDNEXT);
+                RootHandle = WinAPI.FindWindow(ChatWindowClass, roomName);
+                EditMessageHandle = WinAPI.GetWindow(RootHandle, WinAPI.GW_CHILD);
+                SearchWordsHandle = WinAPI.GetWindow(EditMessageHandle, WinAPI.GW_HWNDNEXT);
+                ChatListHandle = WinAPI.GetWindow(SearchWordsHandle, WinAPI.GW_HWNDNEXT);
 
                 if (useTaskChecker)
                 {
@@ -500,16 +500,16 @@ namespace Less.API.NetFramework.KakaoTalkAPI
             {
                 if (!IsOpen()) return false;
 
-                Windows.SetEditText(EditMessageHandle, text, Windows.Encoding.Unicode);
+                WinAPI.SetEditText(EditMessageHandle, text, WinAPI.Encoding.Unicode);
                 Thread.Sleep(ButtonActivateInterval);
-                if (Windows.IsIconic(RootHandle))
+                if (WinAPI.IsIconic(RootHandle))
                 {
                     ActivateInput();
                     Thread.Sleep(SendActivateInterval);
                 }
                 lock (ChatWindows)
                 {
-                    Windows.PressKeyInBackground(EditMessageHandle, Windows.KeyCode.VK_ENTER);
+                    WinAPI.PressKeyInBackground(EditMessageHandle, WinAPI.KeyCode.VK_ENTER);
                     Thread.Sleep(PostDelay);
                 }
                 int interval = KeyPressInterval - PostDelay;
@@ -535,7 +535,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
 
                 try
                 {
-                    IntPtr hMainWindow = Windows.FindWindow(MainWindowClass, MainWindowTitle);
+                    IntPtr hMainWindow = WinAPI.FindWindow(MainWindowClass, MainWindowTitle);
                     lock (Clipboard)
                     {
                         if (backupClipboardData) ClipboardManager.BackupData();
@@ -543,7 +543,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                     }
                     lock (ChatWindows)
                     {
-                        Windows.PostMessage(EditMessageHandle, 0x7E9, 0xE125, 0); // 클립보드에 있는 내용물 붙여넣기
+                        WinAPI.PostMessage(EditMessageHandle, 0x7E9, 0xE125, 0); // 클립보드에 있는 내용물 붙여넣기
                         Thread.Sleep(PostDelay);
 
                         // 퍼포먼스 > 가독성 코딩
@@ -557,12 +557,12 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                             // Foreground Window 검사를 통해 핸들을 얻어오는 데 실패함.
                             // 하지만 무한 루프에 의해 실패할 경우, 기본적인 경우와 다르게 이미지 전송 다이얼로그가 꺼지지 않고 계속 켜져 있음.
                             // 그 버그를 이용하여 전체 TopMost Window들 중 Class 값이 "#32770"이고 Caption 값이 ""이며 OS 윈도우 스택의 최상단(첫 번째)에 있는 것을 찾는 과정.
-                            hSendDialog = Windows.GetFirstHwndWithIdentifiers(ImageDialogClass, ImageDialogCaption);
+                            hSendDialog = WinAPI.GetFirstHwndWithIdentifiers(ImageDialogClass, ImageDialogCaption);
                         }
 
                         if (hSendDialog != IntPtr.Zero)
                         {
-                            Windows.PressKeyInBackground(hSendDialog, Windows.KeyCode.VK_ENTER);
+                            WinAPI.PressKeyInBackground(hSendDialog, WinAPI.KeyCode.VK_ENTER);
                             Thread.Sleep(PostDelay);
                         }
                     }
@@ -598,14 +598,14 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                     else
                     {
                         bool wasMinimized = false;
-                        if (Windows.IsIconic(RootHandle))
+                        if (WinAPI.IsIconic(RootHandle))
                         {
                             wasMinimized = true;
-                            lock (ChatWindows) Windows.ShowWindow(RootHandle, Windows.SW_RESTORE);
+                            lock (ChatWindows) WinAPI.ShowWindow(RootHandle, WinAPI.SW_RESTORE);
                         }
-                        var chatWindowRect = Windows.GetWindowRect(RootHandle);
+                        var chatWindowRect = WinAPI.GetWindowRect(RootHandle);
                         int height = chatWindowRect.bottom - chatWindowRect.top;
-                        Windows.ClickInBackground(RootHandle, Windows.MouseButton.Left, 21, (short)(height - 21));
+                        WinAPI.ClickInBackground(RootHandle, WinAPI.MouseButton.Left, 21, (short)(height - 21));
 
                         // 퍼포먼스 > 가독성 코딩 (SendImageUsingClipboard와 기본적으로 동일한 매커니즘)
                         IntPtr hSendDialog = IntPtr.Zero;
@@ -617,31 +617,31 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                         prevTick = DateTime.Now.Ticks;
                         while (!IsSendEmoticonDialogReady(ref hSendDialog, EmoticonCheckInterval2)) if (DateTime.Now.Ticks - prevTick >= limitInTicks) break;
 
-                        IntPtr hFirstChild = Windows.GetWindow(hSendDialog, Windows.GW_CHILD);
-                        IntPtr hSecondChild = Windows.GetWindow(hFirstChild, Windows.GW_CHILD);
-                        while (!Windows.GetClassName(hSecondChild).Equals(EmoticonSecondChildClass1))
+                        IntPtr hFirstChild = WinAPI.GetWindow(hSendDialog, WinAPI.GW_CHILD);
+                        IntPtr hSecondChild = WinAPI.GetWindow(hFirstChild, WinAPI.GW_CHILD);
+                        while (!WinAPI.GetClassName(hSecondChild).Equals(EmoticonSecondChildClass1))
                         {
-                            Windows.ClickInBackground(hSendDialog, Windows.MouseButton.Left, 58, 56);
+                            WinAPI.ClickInBackground(hSendDialog, WinAPI.MouseButton.Left, 58, 56);
                             Thread.Sleep(MouseClickInterval);
-                            Windows.PressKeyInBackground(hSendDialog, Windows.KeyCode.VK_ESC);
+                            WinAPI.PressKeyInBackground(hSendDialog, WinAPI.KeyCode.VK_ESC);
                             Thread.Sleep(KeyPressInterval);
 
-                            Windows.ClickInBackground(RootHandle, Windows.MouseButton.Left, 21, (short)(height - 21));
+                            WinAPI.ClickInBackground(RootHandle, WinAPI.MouseButton.Left, 21, (short)(height - 21));
                             hSendDialog = IntPtr.Zero;
                             prevTick = DateTime.Now.Ticks;
                             while (!IsDialogForeground(ref hSendDialog, EmoticonCheckInterval1, EmoticonDialogClass, EmoticonDialogCaption)) if (DateTime.Now.Ticks - prevTick >= limitInTicks) break;
                             prevTick = DateTime.Now.Ticks;
                             while (!IsSendEmoticonDialogReady(ref hSendDialog, EmoticonCheckInterval2)) if (DateTime.Now.Ticks - prevTick >= limitInTicks) break;
-                            hFirstChild = Windows.GetWindow(hSendDialog, Windows.GW_CHILD);
-                            hSecondChild = Windows.GetWindow(hFirstChild, Windows.GW_CHILD);
+                            hFirstChild = WinAPI.GetWindow(hSendDialog, WinAPI.GW_CHILD);
+                            hSecondChild = WinAPI.GetWindow(hFirstChild, WinAPI.GW_CHILD);
                         }
 
                         limitInTicks = EmoticonCheckLimit3 * 10000;
                         prevTick = DateTime.Now.Ticks;
                         while (!IsEmoticonTabReady(hSecondChild, EmoticonCheckInterval3)) if (DateTime.Now.Ticks - prevTick >= limitInTicks) break;
-                        IntPtr hSecondNext = Windows.GetWindow(hSecondChild, Windows.GW_HWNDNEXT);
+                        IntPtr hSecondNext = WinAPI.GetWindow(hSecondChild, WinAPI.GW_HWNDNEXT);
 
-                        var dialogRect = Windows.GetWindowRect(hSendDialog);
+                        var dialogRect = WinAPI.GetWindowRect(hSendDialog);
                         int dialogWidth = dialogRect.right - dialogRect.left;
                         int dialogHeight = dialogRect.bottom - dialogRect.top;
                         //if (dialogWidth != EmoticonDialogWidth || dialogHeight != EmoticonDialogHeight) ResizeDialog(hSendDialog, EmoticonDialogWidth, EmoticonDialogHeight);
@@ -650,35 +650,35 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                         int categorySingleRowCount = 7;
                         int categoryKeyleftLoopCount = categorySingleRowCount - 1;
                         int categoryKeyupLoopCount = CategoryPossibleMaxCount / categorySingleRowCount;
-                        for (int i = 0; i < categoryKeyleftLoopCount; i++) Windows.PressKeyInBackground(hSecondChild, Windows.KeyCode.VK_LEFT);
-                        for (int i = 0; i < categoryKeyupLoopCount; i++) Windows.PressKeyInBackground(hSecondChild, Windows.KeyCode.VK_UP);
+                        for (int i = 0; i < categoryKeyleftLoopCount; i++) WinAPI.PressKeyInBackground(hSecondChild, WinAPI.KeyCode.VK_LEFT);
+                        for (int i = 0; i < categoryKeyupLoopCount; i++) WinAPI.PressKeyInBackground(hSecondChild, WinAPI.KeyCode.VK_UP);
 
                         // 카테고리 위치 계산
                         int categoryKeydownLoopCount = (emoticon.Category - 1) / categorySingleRowCount;
                         int categoryKeyrightLoopCount = (emoticon.Category - 1) % categorySingleRowCount;
-                        for (int i = 0; i < categoryKeydownLoopCount; i++) Windows.PressKeyInBackground(hSecondChild, Windows.KeyCode.VK_DOWN);
-                        for (int i = 0; i < categoryKeyrightLoopCount; i++) Windows.PressKeyInBackground(hSecondChild, Windows.KeyCode.VK_RIGHT);
+                        for (int i = 0; i < categoryKeydownLoopCount; i++) WinAPI.PressKeyInBackground(hSecondChild, WinAPI.KeyCode.VK_DOWN);
+                        for (int i = 0; i < categoryKeyrightLoopCount; i++) WinAPI.PressKeyInBackground(hSecondChild, WinAPI.KeyCode.VK_RIGHT);
 
                         // 이모티콘 쪽 선택
-                        Windows.PressKeyInBackground(hSecondChild, Windows.KeyCode.VK_TAB);
+                        WinAPI.PressKeyInBackground(hSecondChild, WinAPI.KeyCode.VK_TAB);
 
                         // 이모티콘 위치 계산
                         int emoticonSingleRowCount = 3;
                         int emoticonKeydownLoopCount = (emoticon.Position - 1) / emoticonSingleRowCount;
                         int emoticonKeyrightLoopCount = (emoticon.Position - 1) % emoticonSingleRowCount;
-                        for (int i = 0; i < emoticonKeydownLoopCount; i++) Windows.PressKeyInBackground(hSecondNext, Windows.KeyCode.VK_DOWN);
-                        for (int i = 0; i < emoticonKeyrightLoopCount; i++) Windows.PressKeyInBackground(hSecondNext, Windows.KeyCode.VK_RIGHT);
+                        for (int i = 0; i < emoticonKeydownLoopCount; i++) WinAPI.PressKeyInBackground(hSecondNext, WinAPI.KeyCode.VK_DOWN);
+                        for (int i = 0; i < emoticonKeyrightLoopCount; i++) WinAPI.PressKeyInBackground(hSecondNext, WinAPI.KeyCode.VK_RIGHT);
 
                         // 입력
-                        Windows.PressKeyInBackground(hSecondNext, Windows.KeyCode.VK_ENTER);
+                        WinAPI.PressKeyInBackground(hSecondNext, WinAPI.KeyCode.VK_ENTER);
                         Thread.Sleep(KeyPressInterval);
 
                         // 최종 전송
-                        Windows.PressKeyInBackground(hSendDialog, Windows.KeyCode.VK_ESC);
-                        Windows.PressKeyInBackground(EditMessageHandle, Windows.KeyCode.VK_ENTER);
+                        WinAPI.PressKeyInBackground(hSendDialog, WinAPI.KeyCode.VK_ESC);
+                        WinAPI.PressKeyInBackground(EditMessageHandle, WinAPI.KeyCode.VK_ENTER);
                         Thread.Sleep(KeyPressInterval);
 
-                        if (wasMinimized) lock (ChatWindows) Windows.ShowWindow(RootHandle, Windows.SW_MINIMIZE);
+                        if (wasMinimized) lock (ChatWindows) WinAPI.ShowWindow(RootHandle, WinAPI.SW_MINIMIZE);
                     }
                 }
 
@@ -697,7 +697,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
 
             private Message[] _GetMessagesUsingClipboard(bool backupClipboardData)
             {
-                Windows.SendMessage(ChatListHandle, 0x7E9, 0x65, 0); // 메시지 전체 선택
+                WinAPI.SendMessage(ChatListHandle, 0x7E9, 0x65, 0); // 메시지 전체 선택
                 string messageString = null;
                 bool isClipboardAvailable = true;
                 Message[] messages = null;
@@ -707,7 +707,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                     try
                     {
                         if (backupClipboardData) ClipboardManager.BackupData();
-                        Windows.SendMessage(ChatListHandle, 0x7E9, 0x64, 0); // 메시지 복사
+                        WinAPI.SendMessage(ChatListHandle, 0x7E9, 0x64, 0); // 메시지 복사
                         messageString = ClipboardManager.GetText();
                         if (backupClipboardData) ClipboardManager.RestoreData();
                     }
@@ -737,7 +737,7 @@ namespace Less.API.NetFramework.KakaoTalkAPI
                 if (!IsOpen()) return;
                 lock (ChatWindows)
                 {
-                    Windows.PressKeyInBackground(RootHandle, Windows.KeyCode.VK_ESC);
+                    WinAPI.PressKeyInBackground(RootHandle, WinAPI.KeyCode.VK_ESC);
                     Thread.Sleep(PostDelay);
                 }
                 int interval = WindowCloseInterval - PostDelay;
@@ -785,8 +785,8 @@ namespace Less.API.NetFramework.KakaoTalkAPI
             public void Minimize()
             {
                 while (!DoesWindowHaveSize()) Thread.Sleep(ProgressCheckInterval);
-                var rect = Windows.GetWindowRect(RootHandle);
-                Windows.ClickInBackground(RootHandle, Windows.MouseButton.Left, (short)((rect.right - rect.left) - 63), 18);
+                var rect = WinAPI.GetWindowRect(RootHandle);
+                WinAPI.ClickInBackground(RootHandle, WinAPI.MouseButton.Left, (short)((rect.right - rect.left) - 63), 18);
             }
 
             /// <summary>
@@ -794,15 +794,15 @@ namespace Less.API.NetFramework.KakaoTalkAPI
             /// </summary>
             public void Restore()
             {
-                Windows.ShowWindow(RootHandle, Windows.SW_RESTORE);
+                WinAPI.ShowWindow(RootHandle, WinAPI.SW_RESTORE);
                 while (!DoesWindowHaveSize()) Thread.Sleep(ProgressCheckInterval);
-                Windows.SetForegroundWindow(RootHandle);
-                Windows.BringWindowToTop(RootHandle);
+                WinAPI.SetForegroundWindow(RootHandle);
+                WinAPI.BringWindowToTop(RootHandle);
             }
 
             private bool DoesWindowHaveSize()
             {
-                var rect = Windows.GetWindowRect(RootHandle);
+                var rect = WinAPI.GetWindowRect(RootHandle);
                 return rect.right - rect.left > 0 && rect.bottom - rect.top > 0;
             }
 
@@ -825,15 +825,15 @@ namespace Less.API.NetFramework.KakaoTalkAPI
             // private 메서드 목록
             private bool IsOpen()
             {
-                return Windows.FindWindow(ChatWindowClass, RoomName) == RootHandle ? true : false;
+                return WinAPI.FindWindow(ChatWindowClass, RoomName) == RootHandle ? true : false;
             }
 
             private bool IsDialogForeground(ref IntPtr hWnd, int checkInterval, string className, string caption)
             {
                 if (checkInterval > 0) Thread.Sleep(checkInterval);
-                IntPtr hWndForeground = Windows.GetForegroundWindow();
-                if (!Windows.GetClassName(hWndForeground).Equals(className)) return false;
-                if (!Windows.GetWindowText(hWndForeground).Equals(caption)) return false;
+                IntPtr hWndForeground = WinAPI.GetForegroundWindow();
+                if (!WinAPI.GetClassName(hWndForeground).Equals(className)) return false;
+                if (!WinAPI.GetWindowText(hWndForeground).Equals(caption)) return false;
 
                 hWnd = hWndForeground;
                 return true;
@@ -848,14 +848,14 @@ namespace Less.API.NetFramework.KakaoTalkAPI
 
                 if (checkInterval > 0) Thread.Sleep(checkInterval);
                 IntPtr hWndTemp;
-                var hDialogList = Windows.GetHwndListWithIdentifiers(EmoticonDialogClass, EmoticonDialogCaption);
+                var hDialogList = WinAPI.GetHwndListWithIdentifiers(EmoticonDialogClass, EmoticonDialogCaption);
                 for (int i = 0; i < hDialogList.Count; i++)
                 {
                     hDialog = hDialogList[i];
-                    hWndTemp = Windows.GetWindow(hDialog, Windows.GW_CHILD); // First Child => EVA_ChildWindow
-                    if (!Windows.GetClassName(hWndTemp).Equals(EmoticonFirstChildClass)) continue;
-                    hWndTemp = Windows.GetWindow(hWndTemp, Windows.GW_CHILD); // Second Child => EVA_ChildWindow_Dblclk / _EVA_CustomScrollCtrl / EVA_VH_ListControl_Dblclk 셋 중 하나
-                    string secondChildClassName = Windows.GetClassName(hWndTemp);
+                    hWndTemp = WinAPI.GetWindow(hDialog, WinAPI.GW_CHILD); // First Child => EVA_ChildWindow
+                    if (!WinAPI.GetClassName(hWndTemp).Equals(EmoticonFirstChildClass)) continue;
+                    hWndTemp = WinAPI.GetWindow(hWndTemp, WinAPI.GW_CHILD); // Second Child => EVA_ChildWindow_Dblclk / _EVA_CustomScrollCtrl / EVA_VH_ListControl_Dblclk 셋 중 하나
+                    string secondChildClassName = WinAPI.GetClassName(hWndTemp);
                     if (secondChildClassName.Equals(EmoticonSecondChildClass1) ||
                         secondChildClassName.Equals(EmoticonSecondChildClass2) ||
                         secondChildClassName.Equals(EmoticonSecondChildClass3)) break;
@@ -868,26 +868,26 @@ namespace Less.API.NetFramework.KakaoTalkAPI
             {
                 if (checkInterval > 0) Thread.Sleep(checkInterval);
 
-                IntPtr hSecondNext = Windows.GetWindow(hSecondChild, Windows.GW_HWNDNEXT);
-                if (!Windows.GetClassName(hSecondNext).Equals(EmoticonSecondNextClass)) return false;
+                IntPtr hSecondNext = WinAPI.GetWindow(hSecondChild, WinAPI.GW_HWNDNEXT);
+                if (!WinAPI.GetClassName(hSecondNext).Equals(EmoticonSecondNextClass)) return false;
 
                 return true;
             }
 
             private void ResizeDialog(IntPtr hWnd, int width, int height)
             {
-                RECT rect = Windows.GetWindowRect(hWnd);
+                RECT rect = WinAPI.GetWindowRect(hWnd);
                 int prevX = rect.left;
                 int prevY = rect.top;
                 int prevWidth = rect.right - rect.left;
                 int prevHeight = rect.bottom - rect.top;
-                Windows.ResizeWindow(hWnd, width, height);
-                Windows.MoveWindow(hWnd, prevX + (prevWidth - width), prevY + (prevHeight - height));
+                WinAPI.ResizeWindow(hWnd, width, height);
+                WinAPI.MoveWindow(hWnd, prevX + (prevWidth - width), prevY + (prevHeight - height));
             }
 
             private void ActivateInput()
             {
-                Windows.SendMessage(RootHandle, Windows.WM_COMMAND, (0x400 * 0x10000) | (1006 & 0xFFFF), (int)RootHandle);
+                WinAPI.SendMessage(RootHandle, WinAPI.WM_COMMAND, (0x400 * 0x10000) | (1006 & 0xFFFF), (int)RootHandle);
             }
 
             private void RunTasks()

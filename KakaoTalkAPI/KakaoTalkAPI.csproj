@@ -45,12 +45,7 @@
     <Compile Include="ClipboardManager.cs" />
     <Compile Include="KakaoTalk.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\WindowsAPI\WindowsAPI\WindowsAPI.csproj">
-      <Project>{50d36596-4f67-440c-8cc7-ec49af42b478}</Project>
-      <Name>WindowsAPI</Name>
-    </ProjectReference>
+    <Compile Include="WinAPI.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
