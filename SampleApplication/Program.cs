@@ -46,7 +46,7 @@ namespace SampleApplication
                 KakaoTalk.Login(tempEmail, tempPassword); // 로그인
                 Console.WriteLine("카카오 로그인 완료");
             }
-            catch (KakaoTalk.AlreadyLoggedInException e) { KakaoTalk.InitializeManually(); } // 예외 발생 시 수동으로 초기화
+            catch (KakaoTalk.AlreadyLoggedInException) { KakaoTalk.InitializeManually(); } // 예외 발생 시 수동으로 초기화
 
             Console.WriteLine("TestLogin 완료");
         }
