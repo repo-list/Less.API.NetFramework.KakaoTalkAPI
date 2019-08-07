@@ -18,8 +18,8 @@ An automation API which is applicable to the software "KakaoTalk for Windows" cr
 @ Other Legal Responsibilities : <br/>
 - Developers using this automation API should never try to harm or damage servers of "Kakao Corp." by any kinds of approaches. <br/>
 - -> 이 자동화 API를 이용하는 개발자들은 절대 어떠한 방법으로도 카카오 회사의 서버에 피해를 입히려는 시도를 해서는 안 됩니다. <br/>
-- Developers using this automation API should never try to take any undesired actions which are opposite to the Kakao Terms of Service (http://www.kakao.com/policy/terms?type=s). <br/>
-- -> 이 자동화 API를 이용하는 개발자들은 절대 카카오 서비스 약관 (http://www.kakao.com/policy/terms?type=s) 에 반하는 바람직하지 않은 행동들을 취해서는 안 됩니다. <br/><br/>
+- Developers using this automation API should never try to take any undesired actions which are opposite to the Kakao Terms of Service (http://www.kakao.com/policy/terms?type=ts). <br/>
+- -> 이 자동화 API를 이용하는 개발자들은 절대 카카오 서비스 약관 (http://www.kakao.com/policy/terms?type=ts) 에 반하는 바람직하지 않은 행동들을 취해서는 안 됩니다. <br/><br/>
 
 # Version History
 @ 0.3.0 (2018-12-11, Latest) <br/>
