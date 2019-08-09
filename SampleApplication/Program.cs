@@ -36,17 +36,13 @@ namespace SampleApplication
             // 수정해야 할 입력값 목록 : tempEmail, tempPassword
             Console.WriteLine("TestLogin 시작");
 
-            try
-            {
-                KakaoTalk.Run(); // 카카오톡 프로세스 실행
-                Console.WriteLine("카카오톡 실행 완료");
+            KakaoTalk.Run(); // 카카오톡 프로세스 실행
+            Console.WriteLine("카카오톡 실행 완료");
 
-                string tempEmail = "카카오 계정(이메일 주소)을 입력합니다";
-                string tempPassword = "비밀번호를 입력합니다";
-                KakaoTalk.Login(tempEmail, tempPassword); // 로그인
-                Console.WriteLine("카카오 로그인 완료");
-            }
-            catch (KakaoTalk.AlreadyLoggedInException) { KakaoTalk.InitializeManually(); } // 예외 발생 시 수동으로 초기화
+            string tempEmail = "카카오 계정(이메일 주소)을 입력합니다";
+            string tempPassword = "비밀번호를 입력합니다";
+            KakaoTalk.Login(tempEmail, tempPassword); // 로그인 (※ 이미 로그인이 된 상태에서 호출할 경우, 무한 루프에 빠지게 되니 각별한 주의가 필요합니다.)
+            Console.WriteLine("카카오 로그인 완료");
 
             Console.WriteLine("TestLogin 완료");
         }
