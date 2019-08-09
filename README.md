@@ -10,7 +10,7 @@ An automation API which is applicable to the software "KakaoTalk for Windows" cr
 
 @ ProductName : Less.API.NetFramework.KakaoTalkAPI <br/>
 
-@ Version : 1.0.0 <br/>
+@ Version : 1.0.1 <br/>
 
 @ License : The Non-Profit Open Software License v3.0 (NPOSL-3.0) (https://opensource.org/licenses/NPOSL-3.0) <br/>
 - -> 이 API에는 NPOSL-3.0 오픈소스 라이선스가 적용되며, 사용자는 절대 영리적 목적으로 이 API를 사용해서는 안 됩니다. <br/>
@@ -22,7 +22,11 @@ An automation API which is applicable to the software "KakaoTalk for Windows" cr
 - -> 이 자동화 API를 이용하는 개발자들은 절대 카카오 서비스 약관 (http://www.kakao.com/policy/terms?type=ts) 에 반하는 바람직하지 않은 행동들을 취해서는 안 됩니다. <br/><br/>
 
 # Version History
-@ 1.0.0 (2019-08-08, Latest) <br/>
+@ 1.0.1 (2019-08-09, Latest) <br/>
+- Stability update. (안정성 업데이트) <br/>
+- Removed IsLoggedIn method in KakaoTalk.cs (KakaoTalk.cs 파일의 IsLoggedIn 메서드 삭제. 현재는 로그인 여부 정확히 판별 불가) <br/><br/>
+
+@ 1.0.0 (2019-08-08) <br/>
 - Amended symptom of ClipboardManager sometimes failing at image processing (가끔씩 이미지 프로세싱에 실패하는 현상 해결) <br/>
 - Amended Thread-related problems (Thread 관련 문제 수정) <br/><br/>
 
